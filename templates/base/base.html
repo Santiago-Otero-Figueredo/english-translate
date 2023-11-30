@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Título de tu página{% endblock %}</title>
+    <meta name="description" content="Descripción de tu página">
+    <meta name="keywords" content="Palabras clave, separadas por comas">
+    <link rel="stylesheet" href="styles.css"> <!-- Enlaza tu archivo de estilos CSS -->
+
+    {% block css %}
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='/css/bootstrap/bootstrap.min.css') }}">
+        <link rel="stylesheet" type="text/css" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css">
+
+
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+
+            *, ::after, ::before{
+                box-sizing: border-box;
+            }
+
+            body{
+                font-family: 'Poppins', sans-serif;
+                font-size: 0.875rem;
+                opacity: 1;
+                overflow-y: scroll;
+                margin: 0;
+            }
+
+            a{
+                cursor: pointer;
+                text-decoration: none;
+                font-family: 'Poppins', sans-serif;
+            }
+
+            li{
+                list-style: none;
+            }
+
+            .active-menu{
+                background-color: cadetblue;
+            }
+            /* Layout for admin dashboard skeleton */
+
+            .wrapper{
+                align-items: stretch;
+                display: flex;
+                width: 100%;
+            }
+
+            #sidebar{
+                max-width: 264px;
+                min-width: 264px;
+                background: var(--bs-dark);
+                transition: all 0.35s ease-in-out;
+            }
+
+            .main{
+                display: flex;
+                flex-direction: column;
+                min-height: 100vh;
+                min-width: 0;
+                overflow: hidden;
+                transition: all 0.35s ease-in-out;
+                width: 100%;
+                background: var(--bs-dark-bg-subtle);
+            }
+
+            /* Sidebar Elements Style*/
+            .sidebar-logo{
+                padding: 1.15rem;
+            }
+
+            .sidebar-logo a{
+                color: #e9ecef;
+                font-size: 1.15rem;
+                font-weight: 600;
+            }
+
+            .sidebar-nav{
+                flex-grow: 1;
+                list-style: none;
+                margin-bottom: 0;
+                padding-left: 0;
+                margin-left: 0;
+            }
+
+            .sidebar-header{
+                color: #e9ecef;
+                font-size: .75rem;
+                padding: 1.5rem 1.5rem .375rem;
+            }
+
+            a.sidebar-link{
+                padding: .625rem 1.625rem;
+                color: #e9ecef;
+                position: relative;
+                display: block;
+                font-size: 0.875rem;
+            }
+
+            .sidebar-link[data-bs-toggle="collapse"]::after{
+                border: solid;
+                border-width: 0 .075rem .075rem 0;
+                content: "";
+                display: inline-block;
+                padding: 2px;
+                position: absolute;
+                right: 1.7rem;
+                top: 1rem;
+                transform: rotate(-135deg);
+                transition: all .2s ease-out;
+            }
+
+            .sidebar-link[data-bs-toggle="collapse"].collapsed::after{
+                transform: rotate(45deg);
+                transition: all .2s ease-out;
+            }
+
+            #sidebar.collapsed {
+                margin-left: -264px;
+            }
+
+
+            /* User Options Style*/
+
+            .avatar{
+                height: 40px;
+                width: 40px;
+            }
+
+            .navbar-expand .navbar-nav{
+                margin-left: auto
+            }
+
+            /* Content Main Style*/
+
+            .content {
+                flex: 1;
+
+            }
+
+            @media (min-width:768) {
+                .content {
+                    flex: 1;
+                    max-width: 85vw;
+                    width: 85vw;
+                }
+            }
+
+            .description-text{
+                height: 10px;
+                border-radius: 10px;
+            }
+
+            .list-container-task{
+                background-color: #fff; /* Color de fondo de la tarjeta */
+                border-radius: 10px; /* Bordes redondeados */
+                overflow: hidden; /* Evitar que el sombreado se extienda más allá de la tarjeta */
+
+                /* Sombreado */
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra suave */
+                transition: transform 0.3s ease; /* Transición al pasar el cursor */
+            }
+
+            .list-container-task:hover {
+                transform: translateY(-5px); /* Efecto de elevación al pasar el cursor */
+            }
+
+            .list-container-task, .list-container-task textarea, .list-container-task input{
+                font-size: 12px;
+            }
+
+            .list-container-task select {
+                height: 2.5em;
+                font-size: 12px;
+            }
+
+            .list-container-task:hover{
+                background-color: #eee;
+            }
+
+
+            .custom-checkbox {
+                cursor: pointer;
+                transform: scale(2.5); /* Ajusta el valor según tus preferencias */
+                border: 1px solid #ccc; /* Ajusta el grosor y el color del borde según tus preferencias */
+            }
+
+
+            /* Estilo personalizado para quitar los bordes de form-control en Bootstrap */
+            .no-input-borders {
+                cursor: pointer;
+                border: none;
+                border-radius: 0; /* O ajusta según tus preferencias */
+                box-shadow: none; /* O ajusta según tus preferencias */
+            }
+
+            .no-input-borders:focus {
+                cursor: default;
+                border-bottom: 1px solid lightgray;
+            }
+
+            .no-input-borders:hover {
+
+                border-bottom: 1px solid lightgray;
+
+            }
+
+        </style>
+    {% endblock %}
+
+</head>
+<body>
+    <div class="wrapper">
+        {% include 'base/sidebar.html' %}
+        <div class="main">
+            {% include 'base/navbar.html' %}
+
+            <main class="content px-3 py-2">
+                {% block content %}
+                {% endblock %}
+            </main>
+            <footer class="footer">
+                <div class="container-fluid">
+                    <div class="row text-muted">
+                        <div class="col-6 text-start">
+                            <p class="mb-0">
+                                <a href="#" class="text-muted">
+                                    <strong>QuantumServices</strong>
+                                </a>
+                            </p>
+                        </div>
+                        <div class="col-6 text-end">
+                            <ul class="list-inline">
+                                <li class="list-inline-item">
+                                    <a href="#" class="text-muted">Contact</a>
+                                </li>
+                                <li class="list-inline-item">
+                                    <a href="#" class="text-muted">About Us</a>
+                                </li>
+                                <li class="list-inline-item">
+                                    <a href="#" class="text-muted">Terms</a>
+                                </li>
+                                <li class="list-inline-item">
+                                    <a href="#" class="text-muted">Booking</a>
+                                </li>
+
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+
+
+
+
+    {% block javascript %}
+        <script src="{{ url_for('static', path='/js/bootstrap/bootstrap.bundle.min.js') }}"></script>
+
+        <script>
+            const sidebarToggle = document.querySelector('#sidebar-toggle')
+            sidebarToggle.addEventListener("click", function(){
+                document.querySelector("#sidebar").classList.toggle('collapsed')
+            })
+        </script>
+    {% endblock %}
+
+</body>
+</html>

@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, List, Union
 
 from datetime import datetime
 
+from .decorators.register import db_transaction
 from ..base import DetailModel
 
 
@@ -29,6 +30,15 @@ class Language(DetailModel):
     description: Mapped[Union[str, None]]
 
     translations: Mapped[List['Translation']] = relationship(back_populates='language')
+
+
+    @staticmethod
+    @db_transaction
+    def create(session, data):
+        new_register = Language(value=data.value)
+        session.add(new_register)
+        session.commit()
+        session.refresh(new_register)
 
 
 class WordType(DetailModel):
@@ -82,10 +92,10 @@ class WordClassification(DetailModel):
 
 
     word_type_id: Mapped[int] = mapped_column(ForeignKey('word_type.id'))
-    word_type: Mapped['WordType'] = relationship(back_populates='words_classification')
+    word_type: Mapped['WordType'] = relationship(back_populates='word_classifications')
 
     word_id: Mapped[int] = mapped_column(ForeignKey('word.id'))
-    word: Mapped['Word'] = relationship(back_populates='words_classification')
+    word: Mapped['Word'] = relationship(back_populates='word_classifications')
 
 
 class Verb(WordClassification):
@@ -96,9 +106,13 @@ class Verb(WordClassification):
     verbal_tense_id: Mapped[int] = mapped_column(ForeignKey('verbal_tense.id'))
     verbal_tense: Mapped['VerbalTense'] = relationship(back_populates='verbs')
 
+    # Configuración de la relación de herencia
+    __mapper_args__ = {
+        'inherit_condition': id == WordClassification.id  # Ajusta según tus necesidades específicas
+    }
     # Agrega estas líneas para establecer la relación de clave foránea con WordClassification
-    word_classification_id: Mapped[int] = mapped_column(ForeignKey('word_classification.id'))
-    word_classification: Mapped['WordClassification'] = relationship(back_populates='__class__')
+    #word_classification_id: Mapped[int] = mapped_column(ForeignKey('word_classification.id'))
+    #word_classification: Mapped['WordClassification'] = relationship(back_populates='word_classification')
 
 class VerbalTense(DetailModel):
     __tablename__ = "verbal_tense"

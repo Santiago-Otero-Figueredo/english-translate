@@ -52,6 +52,9 @@ class BaseModel(Base):
         return session.query(cls).filter(cls.is_active == True).all()
 
 
+
+
+
 class DetailModel(BaseModel):
     __abstract__ = True
 
@@ -59,10 +62,16 @@ class DetailModel(BaseModel):
     value: Mapped[str] = mapped_column(String(50))
     #description: Mapped[Union[str, None]]
 
+    @classmethod
+    async def get_by_value(cls, session, name: str):
+        return session.query(cls).filter(cls.name == name).first()
 
     @classmethod
-    async def get_by_value(cls, name: str, session):
-        return session.query(cls).filter(cls.name == name).first()
+    def exists_by_value(cls, session, value: int):
+
+        if session.query(cls).filter(cls.value == value).first():
+            return True
+        return False
 
 
 

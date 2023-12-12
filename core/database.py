@@ -2,6 +2,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
+from contextlib import contextmanager
+
 from typing import Generator
 from core.config import get_settings
 

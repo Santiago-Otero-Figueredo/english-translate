@@ -17,3 +17,7 @@ This is a simple project for developing a TODO list in Python. The app allows us
    - alembic init migrations
    - alembic revision --autogenerate -m "first commit"
    - alembic upgrade head
+
+
+4. To executed the commands in core:
+   -```python -m core.scripts.<command_name>```

@@ -1,0 +1,84 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    Registro de proyecto
+{% endblock %}
+
+
+
+{% block content %}
+    <div class="px-2">
+        <form action="" method="GET" id="filter" class="row">
+            <label for="filter_state">Filter by the state of the task</label>
+            <input type="text" value="HEY">
+            <div class="col-2 text-left">
+                <button type="submit" class="btn btn-info me-3">Filter ></button>
+            </div>
+        </form>
+        </div>
+    </div>
+
+    {% include 'base/components/forms/modal-confirm-delete.html' %}
+
+{% endblock %}
+
+{% block javascript %}
+    {{ super() }}
+    <script src="{{ url_for('static', path='/js/custom/forms/register.js') }}"></script>
+
+    <script>
+        const textareas = document.querySelectorAll('.description-text');
+
+        textareas.forEach(function(textarea) {
+            textarea.addEventListener('input', function () {
+                // Reinicia la altura a cero para obtener la altura correcta al ajustar
+                this.style.height = '0';
+                // Ajustar la altura del textarea a la altura del contenido
+                this.style.height = (this.scrollHeight) + 'px';
+
+                console.log((this.scrollHeight) + 'px')
+            });
+
+            // Ajusta la altura inicial al cargar la página
+            textarea.style.height = (textarea.scrollHeight)*1.30 + 'px';
+        });
+
+
+        document.querySelectorAll('.complete-task').forEach(function(select) {
+            select.addEventListener('change', function() {
+                var completeAction = select.getAttribute('data-action');
+                var selectedOption = select.options[select.selectedIndex];
+                console.log(completeAction)
+                console.log(selectedOption.value)
+
+
+                // Enviar la solicitud para eliminar la tarea
+                fetch(completeAction, {
+                    method: 'POST', // o 'POST' según tu ruta y método
+                    headers: {
+                        'Content-Type': 'application/json', // Especificar el tipo de contenido como JSON
+                    },
+                    body: JSON.stringify({
+                        'state': selectedOption.value
+                    }),
+                })
+                .then(response => {
+                if (response.ok) {
+                    // Puedes realizar alguna acción adicional si la eliminación fue exitosa
+                    console.log('Tarea completada exitosamente');
+
+                } else {
+                    console.error('Error al intentar completar la tarea');
+                    console.log(response)
+
+                }
+                })
+                .catch(error => console.error('Error en la solicitud:', error))
+                .finally(() => {
+                    console.error('Finally');
+                });
+            });
+        });
+
+    </script>
+{% endblock %}

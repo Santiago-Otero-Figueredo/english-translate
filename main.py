@@ -7,6 +7,8 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from starlette.middleware.authentication import AuthenticationMiddleware
 
+from apps.projects.routers.words import router as word_router
+
 from apps.users.routers import guest_router as guest_router
 from apps.users.routers import user_router as user_router
 
@@ -26,9 +28,11 @@ import os
 # create_tables()
 
 app = FastAPI()
-app.include_router(guest_router)
-app.include_router(user_router)
-app.include_router(auth_router)
+app.include_router(word_router)
+
+# app.include_router(guest_router)
+# app.include_router(user_router)
+# app.include_router(auth_router)
 
 
 app.mount("/static", StaticFiles(directory="static"), name="static")

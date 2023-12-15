@@ -48,6 +48,15 @@ class WordType(DetailModel):
     word_classifications: Mapped[List['WordClassification']] = relationship(back_populates='word_type')
 
 
+    @staticmethod
+    @db_transaction
+    def create(session, data):
+        new_register = WordType(value=data.value)
+        session.add(new_register)
+        session.commit()
+        session.refresh(new_register)
+
+
 class Word(DetailModel):
     __tablename__ = "word"
 
@@ -114,6 +123,7 @@ class Verb(WordClassification):
     #word_classification_id: Mapped[int] = mapped_column(ForeignKey('word_classification.id'))
     #word_classification: Mapped['WordClassification'] = relationship(back_populates='word_classification')
 
+
 class VerbalTense(DetailModel):
     __tablename__ = "verbal_tense"
 
@@ -121,8 +131,10 @@ class VerbalTense(DetailModel):
 
     verbs: Mapped[List['Verb']] = relationship(back_populates='verbal_tense')
 
-
-
-
-
-
+    @staticmethod
+    @db_transaction
+    def create(session, data):
+        new_register = VerbalTense(value=data.value)
+        session.add(new_register)
+        session.commit()
+        session.refresh(new_register)

@@ -1,8 +1,20 @@
-{% set list_priorities_url = url_for('list-priority') %}
+{% set register_word_url = url_for('register-word') %}
 
 <li class="sidebar-item">
-    <a href="{{ list_priorities_url }}" class="sidebar-link {% if list_priorities_url == request.url %} active-menu {% endif %}">
+    <a href="" class="sidebar-link {% if register_word_url != request.url %} collapsed {% endif %} {% if register_word_url == request.url %} active-menu {% endif %}" data-bs-target="#task-menu" data-bs-toggle="collapse" arial-expanded="false">
         <i class="fas fa-atom"></i>
-        Priorities
+        Words
     </a>
+    <ul id="task-menu" class="sidebar-dropdown list-style {% if register_word_url != request.url %} collapsed {% endif %}" data-bs-parent="#sidebar">
+        <li class="sidebar-item sidebar-link {% if register_word_url == request.url %} active-menu {% endif %}">
+            <a href="{{ register_word_url }}" class="sidebar-link">
+                Register
+            </a>
+        </li>
+        <li class="sidebar-item">
+            <a href="" class="sidebar-link">
+                List
+            </a>
+        </li>
+    </ul>
 </li>

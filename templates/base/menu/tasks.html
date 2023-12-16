@@ -1,0 +1,63 @@
+{% set list_tasks_url = url_for('list-tasks') %}
+{% set list_all_tasks_url = url_for('list-all-projects') %}
+<li class="sidebar-item">
+    <a href="" class="sidebar-link {% if list_tasks_url != request.url %} collapsed {% endif %} {% if list_tasks_url == request.url or list_all_tasks_url == request.url %} active-menu {% endif %}" data-bs-target="#task-menu" data-bs-toggle="collapse" arial-expanded="false">
+        <i class="fas fa-atom"></i>
+        Task
+    </a>
+    <ul id="task-menu" class="sidebar-dropdown list-style {% if list_tasks_url != request.url %} collapsed {% endif %}" data-bs-parent="#sidebar">
+        <li class="sidebar-item sidebar-link {% if list_tasks_url == request.url %} active-menu {% endif %}">
+            <a href="{{ list_tasks_url }}" class="sidebar-link">
+                Register
+            </a>
+        </li>
+        <li class="sidebar-item">
+            <a href="#" class="sidebar-link collapsed" data-bs-target="#all-projects" data-bs-toggle="collapse" arial-expanded="false">
+                By project
+            </a>
+            <ul id="all-projects" class="sidebar-dropdown list-style {% if list_all_tasks_url != request.url %} collapsed {% endif %}">
+                <li class="sidebar-item">
+                    <a href="{{list_all_tasks_url}}" class="sidebar-link {% if list_all_tasks_url == request.url %} active-menu {% endif %}">
+                        All
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link">
+                        Level 1.2
+                    </a>
+                </li>
+            </ul>
+        </li>
+        <li class="sidebar-item">
+            <a href="#" class="sidebar-link">
+                Completed
+            </a>
+        </li>
+    </ul>
+</li>
+
+<li class="sidebar-item">
+    <a href="#" class="sidebar-link collapsed" data-bs-target="#multi" data-bs-toggle="collapse" arial-expanded="false">
+        <i class="fas fa-share-alt pe-2"></i>
+        Multi Dropdown
+    </a>
+    <ul id="multi" class="sidebar-dropdown list-style collapse" data-bs-parent="#sidebar">
+        <li class="sidebar-item">
+            <a href="#" class="sidebar-link collapsed" data-bs-target="#level-1" data-bs-toggle="collapse" arial-expanded="false">
+                Level 1
+            </a>
+            <ul id="level-1" class="sidebar-dropdown list-style collapse">
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link">
+                        Level 1.1
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link">
+                        Level 1.2
+                    </a>
+                </li>
+            </ul>
+        </li>
+    </ul>
+</li>

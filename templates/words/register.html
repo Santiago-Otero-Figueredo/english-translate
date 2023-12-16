@@ -9,76 +9,67 @@
 {% block content %}
     <div class="px-2">
         <form action="" method="GET" id="filter" class="row">
-            <label for="filter_state">Filter by the state of the task</label>
-            <input type="text" value="HEY">
+            <div class="my-2">
+                <input type="text" placeholder="Word">
+
+                <div>
+                    <label for="wordTypesSelect">Select word types:</label>
+                    <select id="wordTypesSelect" required data-api-endpoint="{{ url_for('list-words-types') }}">
+                        <option value="" selected disabled>Select a word type</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="verbalTense">Select verbal tense:</label>
+                    <select id="verbalTense" required data-api-endpoint="{{ url_for('list-verbal-tenses') }}">
+                        <option value="" selected disabled>Select a verbal tense</option>
+                    </select>
+                </div>
+            </div>
             <div class="col-2 text-left">
-                <button type="submit" class="btn btn-info me-3">Filter ></button>
+                <button type="submit" class="btn btn-info me-3">Register</button>
             </div>
         </form>
-        </div>
     </div>
 
-    {% include 'base/components/forms/modal-confirm-delete.html' %}
+
+
 
 {% endblock %}
 
 {% block javascript %}
     {{ super() }}
-    <script src="{{ url_for('static', path='/js/custom/forms/register.js') }}"></script>
 
     <script>
-        const textareas = document.querySelectorAll('.description-text');
-
-        textareas.forEach(function(textarea) {
-            textarea.addEventListener('input', function () {
-                // Reinicia la altura a cero para obtener la altura correcta al ajustar
-                this.style.height = '0';
-                // Ajustar la altura del textarea a la altura del contenido
-                this.style.height = (this.scrollHeight) + 'px';
-
-                console.log((this.scrollHeight) + 'px')
-            });
-
-            // Ajusta la altura inicial al cargar la página
-            textarea.style.height = (textarea.scrollHeight)*1.30 + 'px';
-        });
-
-
-        document.querySelectorAll('.complete-task').forEach(function(select) {
-            select.addEventListener('change', function() {
-                var completeAction = select.getAttribute('data-action');
-                var selectedOption = select.options[select.selectedIndex];
-                console.log(completeAction)
-                console.log(selectedOption.value)
-
-
-                // Enviar la solicitud para eliminar la tarea
-                fetch(completeAction, {
-                    method: 'POST', // o 'POST' según tu ruta y método
-                    headers: {
-                        'Content-Type': 'application/json', // Especificar el tipo de contenido como JSON
-                    },
-                    body: JSON.stringify({
-                        'state': selectedOption.value
-                    }),
-                })
-                .then(response => {
-                if (response.ok) {
-                    // Puedes realizar alguna acción adicional si la eliminación fue exitosa
-                    console.log('Tarea completada exitosamente');
-
-                } else {
-                    console.error('Error al intentar completar la tarea');
-                    console.log(response)
-
+        async function getOptionElements(idApiEndPointElement, idSelectElement, dataEndPoint) {
+            try {
+                // Construir manualmente la URL de la API
+                const apiEndpoint = document.getElementById(idApiEndPointElement).getAttribute(dataEndPoint)
+                const response = await fetch(apiEndpoint);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
                 }
-                })
-                .catch(error => console.error('Error en la solicitud:', error))
-                .finally(() => {
-                    console.error('Finally');
+
+                const wordTypes = await response.json();
+
+                // Obtener el elemento select
+                const selectElement = document.getElementById(idSelectElement);
+
+
+                // Agregar una opción por cada tipo de palabra
+                wordTypes.forEach(wordType => {
+                    const option = document.createElement('option');
+                    option.value = wordType.id;
+                    option.text = wordType.value;
+                    selectElement.add(option);
                 });
-            });
-        });
+
+                // Aquí puedes manejar la respuesta, por ejemplo, actualizar el DOM con los datos
+            } catch (error) {
+                console.error('Error:', error.message);
+            }
+        }
+        getOptionElements('wordTypesSelect', 'wordTypesSelect', 'data-api-endpoint')
+        getOptionElements('verbalTense', 'verbalTense', 'data-api-endpoint')
 
     </script>
 {% endblock %}

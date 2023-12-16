@@ -7,7 +7,6 @@ from fastapi.templating import Jinja2Templates
 
 from core.database import get_session
 
-# from apps.projects.schemas.tasks import CreateTaskRequest, CompleteTaskRequest
 # from apps.projects.models import Task, Priority, Project, State
 
 from typing import Union
@@ -44,9 +43,8 @@ router = APIRouter(
 @router.get('/register', status_code=status.HTTP_201_CREATED, response_class=HTMLResponse, name='register-word')
 async def register_task(request: Request, session: Session = Depends(get_session)):
 
-
     context = {}
-    context.update({'request': request})
+    context.update({'request': request, 'verb_select':'Verbs'})
 
     return templates.TemplateResponse('words/register.html', context=context)
 

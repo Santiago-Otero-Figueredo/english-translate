@@ -18,14 +18,9 @@
                     </datalist>
                 </div>
                 <div>
-                    <label for="word">Write word:</label>
-                    <input list="word" id="wordInput" name="word" class="form-control" required/>
-                    <datalist id="word">
-                        <option value="Manzana"></option>
-                        <option value="Banana"></option>
-                        <option value="Cereza"></option>
-                        <option value="Dátil"></option>
-                        <option value="Uva"></option>
+                    <label for="wordVariation">Write word:</label>
+                    <input list="wordVariation" id="wordInput" name="wordVariation" class="form-control" required/>
+                    <datalist id="wordVariation" data-api-endpoint="{{ url_for('list-words-classification') }}">
                         <!-- Agrega más opciones según sea necesario -->
                     </datalist>
                 </div>
@@ -201,7 +196,7 @@
         getOptionElements('wordTypesSelect', 'wordTypesSelect', 'data-api-endpoint')
         getOptionElements('verbalTense', 'verbalTense', 'data-api-endpoint')
         getOptionElements('originalWord', 'originalWord', 'data-api-endpoint')
-
+        getOptionElements('wordVariation', 'wordVariation', 'data-api-endpoint')
 
         // Show or hide an element based on the selected value in a select element
         showHideSelectElementByValue(verbValue, 'wordTypesSelect', 'divVerbalTense')

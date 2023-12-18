@@ -10,6 +10,7 @@ from starlette.middleware.authentication import AuthenticationMiddleware
 from apps.projects.routers.words import router as word_router
 from apps.projects.routers.words_types import router as words_types_router
 from apps.projects.routers.verbal_tenses import router as verbal_tenses_router
+from apps.projects.routers.words_classification import router as words_classification_router
 
 from apps.users.routers import guest_router as guest_router
 from apps.users.routers import user_router as user_router
@@ -34,7 +35,7 @@ app = FastAPI()
 app.include_router(word_router)
 app.include_router(words_types_router)
 app.include_router(verbal_tenses_router)
-
+app.include_router(words_classification_router)
 
 
 # app.include_router(guest_router)

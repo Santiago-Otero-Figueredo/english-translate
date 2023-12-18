@@ -1,9 +1,11 @@
-from apps.projects.models import Language, WordType, VerbalTense, Word
+from apps.projects.models import Language, WordType, VerbalTense, Word, WordClassification
 
 from apps.projects.schemas.language import LanguageRequest
 from apps.projects.schemas.word_type import WordTypeRequest
 from apps.projects.schemas.verbal_tense import VerbalTenseRequest
 from apps.projects.schemas.words import WordRequest
+from apps.projects.schemas.words_classification import WordClassificationRequest
+
 
 
 
@@ -16,7 +18,8 @@ def handle():
     #languages(session)
     #words_types(session)
     #verbal_tense(session)
-    words(session)
+    #words(session)
+    word_classification(session)
 
 
 def languages(session):
@@ -67,6 +70,66 @@ def words(session):
         if not existe:
             Word.create(session, data)
 
+
+def word_classification(session):
+
+    list_words = [
+        {
+            'value': 'Hope',
+            'description': "",
+            'number_of_times_searched': 1,
+            'word_type_id': 1,
+            'word_id': 1
+        },
+        {
+            'value': 'Hopeless',
+            'description': "",
+            'number_of_times_searched': 1,
+            'word_type_id': 2,
+            'word_id': 1
+        },
+        {
+            'value': 'Hopeful',
+            'description': "",
+            'number_of_times_searched': 1,
+            'word_type_id': 2,
+            'word_id': 1
+        },
+        {
+            'value': 'Happy',
+            'description': "",
+            'number_of_times_searched': 1,
+            'word_type_id': 2,
+            'word_id': 2
+        },
+        {
+            'value': 'Unhappy',
+            'description': "",
+            'number_of_times_searched': 1,
+            'word_type_id': 2,
+            'word_id': 2
+        },
+        {
+            'value': 'Happiness',
+            'description': "",
+            'number_of_times_searched': 1,
+            'word_type_id': 1,
+            'word_id': 2
+        },
+    ]
+
+
+    for word in list_words:
+        data = WordClassificationRequest(
+            value= word['value'],
+            description= word['description'],
+            number_of_times_searched= word['number_of_times_searched'],
+            word_type_id= word['word_type_id'],
+            word_id= word['word_id']
+        )
+        existe = WordClassification.exists_by_value(session, data.value)
+        if not existe:
+            WordClassification.create(session, data)
 
 
 handle()

@@ -96,6 +96,7 @@ class Translation(DetailModel):
     example_id: Mapped[Union[int, None]] = mapped_column(ForeignKey('example.id'))
     example: Mapped[Union['Example', None]] = relationship(back_populates='translation')
 
+
 class WordClassification(DetailModel):
     __tablename__ = "word_classification"
 
@@ -112,6 +113,20 @@ class WordClassification(DetailModel):
 
     word_id: Mapped[int] = mapped_column(ForeignKey('word.id'))
     word: Mapped['Word'] = relationship(back_populates='word_classifications')
+
+    @staticmethod
+    @db_transaction
+    def create(session, data):
+        new_register = WordClassification(
+            value= data.value,
+            description= data.description,
+            number_of_times_searched= data.number_of_times_searched,
+            word_type_id= data.word_type_id,
+            word_id= data.word_id
+        )
+        session.add(new_register)
+        session.commit()
+        session.refresh(new_register)
 
 
 class Verb(WordClassification):
@@ -166,7 +181,7 @@ class SourceContent(BaseModel):
     description: Mapped[Union[str, None]]
 
     word_classification_id: Mapped[Union[int, None]] = mapped_column(ForeignKey('word_classification.id'))
-    word_classification: Mapped[Union['WordClassification', None]] = relationship(back_populates='source_content')
+    word_classification: Mapped[Union['WordClassification', None]] = relationship(back_populates='source_contents')
 
     api_connection_id: Mapped[int] = mapped_column(ForeignKey('api_connection.id'))
     api_connection: Mapped['ApiConnection'] = relationship(back_populates='source_contents')

@@ -1,8 +1,10 @@
-from apps.projects.models import Language, WordType, VerbalTense
+from apps.projects.models import Language, WordType, VerbalTense, Word
 
 from apps.projects.schemas.language import LanguageRequest
 from apps.projects.schemas.word_type import WordTypeRequest
 from apps.projects.schemas.verbal_tense import VerbalTenseRequest
+from apps.projects.schemas.words import WordRequest
+
 
 
 
@@ -13,7 +15,8 @@ def handle():
     session = SessionLocal()
     #languages(session)
     #words_types(session)
-    verbal_tense(session)
+    #verbal_tense(session)
+    words(session)
 
 
 def languages(session):
@@ -41,15 +44,28 @@ def words_types(session):
 
 def verbal_tense(session):
 
-    list_types = ['Present', 'Past', 'Future', 'Present Participle', 'Past Participle']
+    list_verbal_tense = ['Present', 'Past', 'Future', 'Present Participle', 'Past Participle']
 
-    for type in list_types:
+    for verbal_tense in list_verbal_tense:
         data = VerbalTenseRequest(
-            value=type
+            value=verbal_tense
         )
         existe = VerbalTense.exists_by_value(session, data.value)
         if not existe:
             VerbalTense.create(session, data)
+
+
+def words(session):
+
+    list_words = ['Hope', 'Happy', 'Run', 'Eat', 'Drink', 'Go', 'Sad']
+
+    for word in list_words:
+        data = WordRequest(
+            value=word
+        )
+        existe = Word.exists_by_value(session, data.value)
+        if not existe:
+            Word.create(session, data)
 
 
 

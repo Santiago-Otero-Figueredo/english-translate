@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, List, Union
 from datetime import datetime
 
 from .decorators.register import db_transaction
-from ..base import DetailModel
+from ..base import DetailModel, BaseModel
 
 
 ####################################### REVISAR ###########################################
@@ -63,6 +63,14 @@ class Word(DetailModel):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     word_classifications: Mapped[List['WordClassification']] = relationship(back_populates='word')
 
+    @staticmethod
+    @db_transaction
+    def create(session, data):
+        new_register = Word(value=data.value)
+        session.add(new_register)
+        session.commit()
+        session.refresh(new_register)
+
 
 class Example(DetailModel):
     __tablename__ = "example"
@@ -92,13 +100,12 @@ class WordClassification(DetailModel):
     __tablename__ = "word_classification"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    level: Mapped[int] = mapped_column(default=0)
+    number_of_times_searched: Mapped[int] = mapped_column(default=1)
     description: Mapped[Union[str, None]]
-    source_content: Mapped[Union[str, None]] = mapped_column(String(150), default='')
 
     examples: Mapped[List['Example']] = relationship(back_populates='word_classification')
     translations: Mapped[List['Translation']] = relationship(back_populates='word_classification')
-
+    source_contents: Mapped[List['SourceContent']] = relationship(back_populates='word_classification')
 
     word_type_id: Mapped[int] = mapped_column(ForeignKey('word_type.id'))
     word_type: Mapped['WordType'] = relationship(back_populates='word_classifications')
@@ -138,3 +145,29 @@ class VerbalTense(DetailModel):
         session.add(new_register)
         session.commit()
         session.refresh(new_register)
+
+
+class ApiConnection(BaseModel):
+    __tablename__ = "api_connection"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(50))
+    url: Mapped[Union[str, None]]
+    description: Mapped[Union[str, None]]
+
+    source_contents: Mapped[List['SourceContent']] = relationship(back_populates='api_connection')
+
+
+class SourceContent(BaseModel):
+    __tablename__ = "source_content"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(50))
+    description: Mapped[Union[str, None]]
+
+    word_classification_id: Mapped[Union[int, None]] = mapped_column(ForeignKey('word_classification.id'))
+    word_classification: Mapped[Union['WordClassification', None]] = relationship(back_populates='source_content')
+
+    api_connection_id: Mapped[int] = mapped_column(ForeignKey('api_connection.id'))
+    api_connection: Mapped['ApiConnection'] = relationship(back_populates='source_contents')
+

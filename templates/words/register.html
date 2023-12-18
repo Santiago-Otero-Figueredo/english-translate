@@ -11,8 +11,15 @@
         <form action="" method="GET" id="filter" class="row">
             <div class="my-2">
                 <div>
-                    <label for="word">Select word:</label>
-                    <input list="word" id="wordInput" name="word" />
+                    <label for="originalWord">Select original word:</label>
+                    <input list="originalWord" id="originalWordInput" name="originalWord" class="form-control" />
+                    <datalist id="originalWord" data-api-endpoint="{{ url_for('list-words') }}">
+                        <!-- Agrega más opciones según sea necesario -->
+                    </datalist>
+                </div>
+                <div>
+                    <label for="word">Write word:</label>
+                    <input list="word" id="wordInput" name="word" class="form-control" required/>
                     <datalist id="word">
                         <option value="Manzana"></option>
                         <option value="Banana"></option>
@@ -24,13 +31,13 @@
                 </div>
                 <div>
                     <label for="wordTypesSelect">Select word types:</label>
-                    <select id="wordTypesSelect" required data-api-endpoint="{{ url_for('list-words-types') }}">
+                    <select id="wordTypesSelect" class="form-control" data-api-endpoint="{{ url_for('list-words-types') }}" required>
                         <option value="" selected disabled>Select a word type</option>
                     </select>
                 </div>
                 <div id="divVerbalTense">
                     <label for="verbalTense">Select verbal tense:</label>
-                    <select id="verbalTense" required data-api-endpoint="{{ url_for('list-verbal-tenses') }}">
+                    <select id="verbalTense" class="form-control" data-api-endpoint="{{ url_for('list-verbal-tenses') }}">
                         <option value="" selected disabled>Select a verbal tense</option>
                     </select>
                 </div>
@@ -51,6 +58,8 @@
 
     <script>
         let selectWordTypesSelect = document.getElementById('wordTypesSelect');
+        let selectVerbalTense = document.getElementById('verbalTense');
+
         let verbValue = '{{verb_select}}'
 
         /**
@@ -87,9 +96,11 @@
                 // Add an option for each word type
                 wordTypes.forEach(wordType => {
                     const option = document.createElement('option');
-                    option.value = wordType.id;
+                    if (selectElement.tagName.toLowerCase() === 'select') {
+                        option.value = wordType.id;
+                    }
                     option.text = wordType.value;
-                    selectElement.add(option);
+                    selectElement.appendChild(option);
                 });
 
                 // Here you can handle the response, for example, update the DOM with the data
@@ -101,10 +112,35 @@
         // Event listener for the change event on the wordTypesSelect element
         selectWordTypesSelect.addEventListener('change', function() {
             // Show or hide another element based on the selected value
-            showHideSelectElementByValue(verbValue, 'wordTypesSelect', 'divVerbalTense')
+            showHideSelectElementByValue(
+                verbValue,
+                'wordTypesSelect',
+                'divVerbalTense',
+                // Functions to execute when showing the element
+                showFunctions = [
+                    () => {selectVerbalTense.required = true}
+                ],
+                // Functions to execute when hiding the element
+                hideFunctions = [
+                    () => {
+                        selectVerbalTense.selectedIndex  = 0
+                        selectVerbalTense.required = false
+                    }
+                ]
+            )
 
         });
 
+        /**
+         * Executes an array of functions.
+         *
+         * @param {Function[]} functions - An array of functions to be executed.
+         */
+        function executeFunctions(functions) {
+            for (const func of functions) {
+                func();
+            }
+        }
 
         /**
          * Get the text of the selected option in a select element.
@@ -118,20 +154,24 @@
         }
 
         /**
-         * Show or hide an element based on the selected value in another select element.
+         * Show or hide an HTML element based on the selected value in another select element.
          * @param {string} value - Value to compare with the selection of the select element.
          * @param {string} idSelectElement - ID of the select element.
          * @param {string} idElementHtml - ID of the element to be shown or hidden.
+         * @param {Function[]} showFunctions - An array of functions to execute when showing the element.
+         * @param {Function[]} hideFunctions - An array of functions to execute when hiding the element.
          */
-        function showHideSelectElementByValue(value, idSelectElement, idElementHtml){
+        function showHideSelectElementByValue(value, idSelectElement, idElementHtml, showFunctions = [], hideFunctions= []){
             const elementHtml = document.getElementById(idElementHtml);
             const selectedHtml = document.getElementById(idSelectElement);
             const selectedValue = getSelectedText(idSelectElement)
 
             if (selectedValue === value) {
                 showElement(idElementHtml)
+                executeFunctions(showFunctions);
             }else{
                 hideElement(idElementHtml)
+                executeFunctions(hideFunctions);
             }
         }
 
@@ -160,6 +200,8 @@
         // Get options from the API and add them to specific select elements
         getOptionElements('wordTypesSelect', 'wordTypesSelect', 'data-api-endpoint')
         getOptionElements('verbalTense', 'verbalTense', 'data-api-endpoint')
+        getOptionElements('originalWord', 'originalWord', 'data-api-endpoint')
+
 
         // Show or hide an element based on the selected value in a select element
         showHideSelectElementByValue(verbValue, 'wordTypesSelect', 'divVerbalTense')

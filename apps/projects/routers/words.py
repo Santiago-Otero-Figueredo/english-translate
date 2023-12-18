@@ -8,8 +8,10 @@ from fastapi.templating import Jinja2Templates
 from core.database import get_session
 
 # from apps.projects.models import Task, Priority, Project, State
+from apps.projects.models import Word
+from apps.projects.schemas.words import WordValueRequest
 
-from typing import Union
+from typing import Union, List
 
 templates = Jinja2Templates(directory='templates/')
 
@@ -38,6 +40,13 @@ router = APIRouter(
 #     context.update({'request': request,'tasks':tasks, 'priorities': priorities, 'projects': projects, 'states': states})
 
 #     return templates.TemplateResponse('tasks/register.html', context=context)
+@router.get('/list', status_code=status.HTTP_200_OK, name='list-words')
+async def list_task(session: Session = Depends(get_session)) -> List[WordValueRequest]:
+    try:
+        verbal_tenses = await Word.get_all(session)
+        return verbal_tenses
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An error occurred while fetching words")
 
 
 @router.get('/register', status_code=status.HTTP_201_CREATED, response_class=HTMLResponse, name='register-word')

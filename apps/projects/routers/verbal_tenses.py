@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 from core.database import get_session
 
 from apps.projects.models import VerbalTense
-from apps.projects.schemas.verbal_tense import VerbalTenseValueRequest
+from apps.projects.schemas.detail_model import DetailModelRequest
 
 from typing import List
 
@@ -22,7 +22,7 @@ router = APIRouter(
 
 
 @router.get('/list', status_code=status.HTTP_200_OK, name='list-verbal-tenses')
-async def list_task(session: Session = Depends(get_session)) -> List[VerbalTenseValueRequest]:
+async def list_task(session: Session = Depends(get_session)) -> List[DetailModelRequest]:
     try:
         verbal_tenses = await VerbalTense.get_all(session)
         return verbal_tenses

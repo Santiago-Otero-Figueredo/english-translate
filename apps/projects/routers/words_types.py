@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 from core.database import get_session
 
 from apps.projects.models import WordType
-from apps.projects.schemas.word_type import WordTypeRequest
+from apps.projects.schemas.detail_model import DetailModelRequest
 
 from typing import List
 
@@ -22,7 +22,7 @@ router = APIRouter(
 
 
 @router.get('/list', status_code=status.HTTP_200_OK, name='list-words-types')
-async def list_task(session: Session = Depends(get_session)) -> List[WordTypeRequest]:
+async def list_task(session: Session = Depends(get_session)) -> List[DetailModelRequest]:
     try:
         word_types = await WordType.get_all(session)
         return word_types

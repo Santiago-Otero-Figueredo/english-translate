@@ -9,7 +9,7 @@ from core.database import get_session
 
 # from apps.projects.models import Task, Priority, Project, State
 from apps.projects.models import Word
-from apps.projects.schemas.words import WordValueRequest
+from apps.projects.schemas.detail_model import DetailModelRequest
 
 from typing import Union, List
 
@@ -41,7 +41,7 @@ router = APIRouter(
 
 #     return templates.TemplateResponse('tasks/register.html', context=context)
 @router.get('/list', status_code=status.HTTP_200_OK, name='list-words')
-async def list_task(session: Session = Depends(get_session)) -> List[WordValueRequest]:
+async def list_task(session: Session = Depends(get_session)) -> List[DetailModelRequest]:
     try:
         verbal_tenses = await Word.get_all(session)
         return verbal_tenses

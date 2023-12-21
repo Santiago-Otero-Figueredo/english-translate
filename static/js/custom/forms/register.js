@@ -58,7 +58,6 @@ document.querySelectorAll('.delete').forEach(function(button) {
             .then(response => {
                 if (response.ok) {
                     // Puedes realizar alguna acción adicional si la eliminación fue exitosa
-                    console.log('Tarea eliminada exitosamente');
                     window.location.reload();
                 } else {
                     console.error('Error al intentar eliminar la tarea');

@@ -3,7 +3,7 @@ from jinja2 import Environment, FileSystemLoader
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-
+from fastapi.middleware.cors import CORSMiddleware
 
 from starlette.middleware.authentication import AuthenticationMiddleware
 
@@ -32,6 +32,18 @@ import os
 # create_tables()
 
 app = FastAPI()
+
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(word_router)
 app.include_router(words_types_router)
 app.include_router(verbal_tenses_router)

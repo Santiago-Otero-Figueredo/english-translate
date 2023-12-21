@@ -54,85 +54,38 @@
 {% block javascript %}
     {{ super() }}
 
-    <script>
+    <script type="module">
+        import { showElement, hideElement, formatAndSetTitle, executeFunctions, getSelectedText } from "{{ url_for('static', path='/js/custom/aux/aux.js') }}";
+        import { getOptionElements, showHideSelectElementByValue } from "{{ url_for('static', path='/js/custom/select-apis/selectGetValueApis.js') }}";
+
         let selectWordTypesSelect = document.getElementById('wordTypesSelect');
         let selectVerbalTense = document.getElementById('verbalTense');
 
-        let verbValue = '{{verb_select}}'
 
         let divOriginalWorld = document.getElementById('divOriginalWord');
         let inputWordVariation = document.getElementById('wordVariationInput');
         let inputOriginalWordInput = document.getElementById('originalWordInput');
 
-
-
-
-
-        /**
-         * Get options from an API endpoint and add them to a select element.
-         * @param {string} idApiEndPointElement - ID of the element containing the API endpoint data attribute.
-         * @param {string} idSelectElement - ID of the select element to which options will be added.
-         * @param {string} dataEndPoint - Name of the data attribute containing the URL of the API endpoint.
-         * @throws {Error} If the API response is not successful or if the wordType object lacks id and value properties.
-         */
-        async function getOptionElements(idApiEndPointElement, idSelectElement, dataEndPoint) {
-            try {
-                // Manually build the API URL
-                const apiEndpoint = document.getElementById(idApiEndPointElement).getAttribute(dataEndPoint)
-                const response = await fetch(apiEndpoint);
-
-                // Throw an error if the response is not successful
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-
-                // Get the JSON object from the response
-                const wordTypes = await response.json();
-
-                // Check if each wordType has id and value properties
-                wordTypes.forEach(wordType => {
-                    if (!wordType.id || !wordType.value) {
-                        throw new Error('Cada objeto wordType debe tener las propiedades id y value.');
-                    }
-                });
-
-                // Get the select element
-                const selectElement = document.getElementById(idSelectElement);
-
-                // Add an option for each word type
-                wordTypes.forEach(wordType => {
-                    const option = document.createElement('option');
-                    if (selectElement.tagName.toLowerCase() === 'select') {
-                        option.value = wordType.id;
-                    }
-                    option.text = wordType.value;
-                    selectElement.appendChild(option);
-                });
-
-                // Here you can handle the response, for example, update the DOM with the data
-            } catch (error) {
-                console.error('Error:', error.message);
-            }
-        }
+        let verbValue = '{{verb_select}}'
 
         // Event listener for the change event on the wordTypesSelect element
         selectWordTypesSelect.addEventListener('change', function() {
             // Show or hide another element based on the selected value
             showHideSelectElementByValue(
-                verbValue,
-                'wordTypesSelect',
-                'divVerbalTense',
-                // Functions to execute when showing the element
-                showFunctions = [
-                    () => {selectVerbalTense.required = true}
-                ],
-                // Functions to execute when hiding the element
-                hideFunctions = [
-                    () => {
-                        selectVerbalTense.selectedIndex  = 0
-                        selectVerbalTense.required = false
-                    }
-                ]
+                {
+                    value: verbValue,
+                    idSelectElement: 'wordTypesSelect',
+                    idElementHtml: 'divVerbalTense',
+                    showFunctions: [
+                        () => {selectVerbalTense.required = true}
+                    ],
+                    hideFunctions: [
+                        () => {
+                            selectVerbalTense.selectedIndex  = 0
+                            selectVerbalTense.required = false
+                        }
+                    ]
+                }
             )
 
         });
@@ -151,16 +104,22 @@
             // Verificar si el inputWordVariation está vacío
             if (inputValue !== '') {
                 // Si no está vacío, mostrar el divOriginalWord
-                showElement('divOriginalWord');
+                showElement(
+                    {
+                        idElementHtml: 'divOriginalWord'
+                    }
+                );
             } else {
                 // Si está vacío, ocultar el divOriginalWord
                 hideElement(
-                    'divOriginalWord',
-                    functions=[
-                        () => {
-                            inputOriginalWordInput.value = ''
-                        }
-                    ]
+                    {
+                        idElementHtml: 'divOriginalWord',
+                        functions:[
+                            () => {
+                                inputOriginalWordInput.value = ''
+                            }
+                        ]
+                    }
                 );
             }
         });
@@ -174,92 +133,6 @@
             formatAndSetTitle(inputOriginalWordInput);
         });
 
-        /**
-         * Executes an array of functions.
-         *
-         * @param {Function[]} functions - An array of functions to be executed.
-         */
-        function executeFunctions(functions) {
-            for (const func of functions) {
-                func();
-            }
-        }
-
-        /**
-         * Get the text of the selected option in a select element.
-         * @param {string} idSelectElement - ID of the select element.
-         * @returns {string} Text of the selected option.
-         */
-        function getSelectedText(idSelectElement) {
-            const selectedHtml = document.getElementById(idSelectElement);
-            const selectedValue = selectedHtml.options[selectedHtml.selectedIndex].text
-            return selectedValue
-        }
-
-        /**
-         * Show or hide an HTML element based on the selected value in another select element.
-         * @param {string} value - Value to compare with the selection of the select element.
-         * @param {string} idSelectElement - ID of the select element.
-         * @param {string} idElementHtml - ID of the element to be shown or hidden.
-         * @param {Function[]} showFunctions - An array of functions to execute when showing the element.
-         * @param {Function[]} hideFunctions - An array of functions to execute when hiding the element.
-         */
-        function showHideSelectElementByValue(value, idSelectElement, idElementHtml, showFunctions = [], hideFunctions= []){
-            const elementHtml = document.getElementById(idElementHtml);
-            const selectedHtml = document.getElementById(idSelectElement);
-            const selectedValue = getSelectedText(idSelectElement)
-
-            if (selectedValue === value) {
-                showElement(idElementHtml, showFunctions)
-            }else{
-                hideElement(idElementHtml, hideFunctions)
-            }
-        }
-
-        /**
-         * Show an element by changing its CSS classes.
-         * @param {string} idElementHtml - ID of the element to be shown.
-         * @param {Function[]} showFunctions - An array of functions to execute when showing the element.
-         */
-        function showElement(idElementHtml, functions){
-            const element = document.getElementById(idElementHtml);
-
-            element.classList.add('d-block');
-            element.classList.remove('d-none');
-            if(functions){
-                executeFunctions(functions);
-            }
-        }
-
-        /**
-         * Hide an element by changing its CSS classes.
-         * @param {string} idElementHtml - ID of the element to be hidden.
-         */
-        function hideElement(idElementHtml, functions){
-            const element = document.getElementById(idElementHtml);
-
-            element.classList.add('d-none');
-            element.classList.remove('d-block');
-            if(functions){
-                executeFunctions(functions);
-            }
-        }
-
-        /**
-         * Formatea el título del elemento con el ID proporcionado.
-         * Capitaliza la primera letra y convierte el resto a minúsculas.
-         * @param {string} idInputElement - ID del elemento input.
-         */
-        function formatAndSetTitle(inputElement) {
-            // Obtener el valor del elemento, eliminar espacios en blanco al principio y al final
-            const inputValue = inputElement.value;
-
-            // Formatear el texto: capitalizar la primera letra, convertir el resto a minúsculas
-            const formattedText = inputValue.charAt(0).toUpperCase() + inputValue.slice(1).toLowerCase();
-            console.log(formattedText)
-            // Establecer el título del elemento formateado
-            inputElement.value = formattedText;
-        }
 
         // Get options from the API and add them to specific select elements
         getOptionElements('wordTypesSelect', 'wordTypesSelect', 'data-api-endpoint')
@@ -268,7 +141,13 @@
         getOptionElements('wordVariation', 'wordVariation', 'data-api-endpoint')
 
         // Show or hide an element based on the selected value in a select element
-        showHideSelectElementByValue(verbValue, 'wordTypesSelect', 'divVerbalTense')
+        showHideSelectElementByValue(
+            {
+                value: verbValue,
+                idSelectElement: 'wordTypesSelect',
+                idElementHtml: 'divVerbalTense',
+            }
+        )
 
 
     </script>

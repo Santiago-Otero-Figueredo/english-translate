@@ -114,6 +114,7 @@ class WordClassification(DetailModel):
     word_id: Mapped[int] = mapped_column(ForeignKey('word.id'))
     word: Mapped['Word'] = relationship(back_populates='word_classifications')
 
+
     @staticmethod
     @db_transaction
     def create(session, data):
@@ -132,7 +133,7 @@ class WordClassification(DetailModel):
 class Verb(WordClassification):
     __tablename__ = "verb"
 
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(ForeignKey('word_classification.id'), primary_key=True)
 
     verbal_tense_id: Mapped[int] = mapped_column(ForeignKey('verbal_tense.id'))
     verbal_tense: Mapped['VerbalTense'] = relationship(back_populates='verbs')

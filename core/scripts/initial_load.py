@@ -15,10 +15,10 @@ from core.database import SessionLocal
 
 def handle():
     session = SessionLocal()
-    #languages(session)
-    #words_types(session)
-    #verbal_tense(session)
-    #words(session)
+    languages(session)
+    words_types(session)
+    verbal_tense(session)
+    words(session)
     word_classification(session)
 
 
@@ -36,9 +36,9 @@ def words_types(session):
 
     list_types = ['Nouns', 'Adjectives', 'Verbs', 'Adverbs']
 
-    for type in list_types:
+    for type_word in list_types:
         data = WordTypeRequest(
-            value=type
+            value=type_word
         )
         existe = WordType.exists_by_value(session, data.value)
         if not existe:

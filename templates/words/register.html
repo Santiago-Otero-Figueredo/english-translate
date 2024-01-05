@@ -44,6 +44,18 @@
                 <button type="submit" class="btn btn-info me-3">Register</button>
             </div>
         </form>
+
+        <div id="divPrueba" class="col">
+            <label for="prueba">Select original word:</label>
+            <input list="prueba" id="pruebaInput" name="prueba" class="form-control" required/>
+            <datalist id="prueba">
+                <option value="Opción 1">
+                <option value="Opción 2">
+                <option value="Opción 3">
+            </datalist>
+            <button onclick="agregarSeleccion()">Agregar</button>
+            <ul id="miLista"></ul>
+        </div>
     </div>
 
 
@@ -54,8 +66,32 @@
 {% block javascript %}
     {{ super() }}
 
+    <script>
+        function agregarSeleccion() {
+            var input = document.getElementById('pruebaInput');
+            var lista = document.getElementById('prueba');
+            var seleccionActual = input.value;
+
+            // Agregar la selección a la lista, si aún no está presente
+            if (seleccionActual && !lista.innerHTML.includes(seleccionActual)) {
+                lista.innerHTML += `<li>${seleccionActual}</li>`;
+            }
+
+            // Limpiar el input
+            input.value = '';
+        }
+
+        function verificarTecla(event) {
+            // Verificar si la tecla presionada es Enter
+            if (event.key === 'Enter') {
+                agregarSeleccion();
+                return false; // Prevenir cualquier acción predeterminada de Enter
+            }
+        }
+    </script>
+
     <script type="module">
-        import { showElement, hideElement, formatAndSetTitle, executeFunctions, getSelectedText } from "{{ url_for('static', path='/js/custom/aux/aux.js') }}";
+        import { showElement, hideElement, formatAndSetTitle, executeFunctions, getSelectedText } from "{{ url_for('static', path='/js/custom/utilities/utilities.js') }}";
         import { getOptionElements, showHideSelectElementByValue } from "{{ url_for('static', path='/js/custom/select-apis/selectGetValueApis.js') }}";
 
         let selectWordTypesSelect = document.getElementById('wordTypesSelect');

@@ -97,6 +97,21 @@ class Translation(DetailModel):
     example: Mapped[Union['Example', None]] = relationship(back_populates='translation')
 
 
+class Synonym(BaseModel):
+    __tablename__ = 'synonym'
+
+    id: Mapped[int] = mapped_column(primary_key=True,  index=True)
+    word_classification_id: Mapped[int] = mapped_column(ForeignKey('word_classification.id'))
+    synonym_id: Mapped[int] = mapped_column(ForeignKey('word_classification.id'))
+
+
+class Antonym(BaseModel):
+    __tablename__ = 'antonym'
+    id: Mapped[int] = mapped_column(primary_key=True,  index=True)
+    word_classification_id: Mapped[int] = mapped_column(ForeignKey('word_classification.id'))
+    antonym_id: Mapped[int] = mapped_column(ForeignKey('word_classification.id'))
+
+
 class WordClassification(DetailModel):
     __tablename__ = "word_classification"
 
@@ -114,6 +129,23 @@ class WordClassification(DetailModel):
     word_id: Mapped[int] = mapped_column(ForeignKey('word.id'))
     word: Mapped['Word'] = relationship(back_populates='word_classifications')
 
+    # Many to many relationship for synonyms
+    synonyms: Mapped[List['WordClassification']] = relationship(
+        'WordClassification',
+        secondary=Synonym.__tablename__,
+        primaryjoin=id == Synonym.word_classification_id,
+        secondaryjoin=id == Synonym.synonym_id,
+        backref="synonym_of"
+    )
+
+    # Many to many relationship for antonyms
+    antonyms: Mapped[List['WordClassification']] = relationship(
+        'WordClassification',
+        secondary=Antonym.__table__,
+        primaryjoin=id == Antonym.word_classification_id,
+        secondaryjoin=id == Antonym.antonym_id,
+        backref="antonym_of"
+    )
 
     @staticmethod
     @db_transaction
@@ -128,6 +160,8 @@ class WordClassification(DetailModel):
         session.add(new_register)
         session.commit()
         session.refresh(new_register)
+
+
 
 
 class Verb(WordClassification):

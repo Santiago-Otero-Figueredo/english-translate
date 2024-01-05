@@ -1,5 +1,5 @@
 
-import { showElement, hideElement, getSelectedText } from '../aux/aux.js';
+import { showElement, hideElement, getSelectedText } from '../utilities/utilities.js';
 
 /**
  * Get options from an API endpoint and add them to a select element.

@@ -1,192 +1,195 @@
-{% extends 'base/base.html' %}
-
-{% block title %}
-    Registro de proyecto
-{% endblock %}
-
-
+{% extends 'base/base.html' %} {% block title %} Registro de proyecto
+<link
+  href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css"
+  rel="stylesheet"
+/>
+{% endblock %} 
 
 {% block content %}
     <div class="px-2">
-        <form action="" method="GET" id="filter" class="row">
+        <form action="{{ url_for('register-word') }}" method="POST" id="formRegister" class="row">
             <div class="m-2 border rounded px-2 pt-2 pb-3 row">
                 <div id="divOriginalWord" class="col d-none">
                     <label for="originalWord">Select original word:</label>
-                    <input list="originalWord" id="originalWordInput" name="originalWord" class="form-control" required/>
-                    <datalist id="originalWord" data-api-endpoint="{{ url_for('list-words') }}">
-                        <!-- Agrega más opciones según sea necesario -->
+                    <input list="originalWord" id="originalWordInput" name="originalWord" class="form-control" required />
+                    <datalist id="originalWord" data-api-endpoint="{{ url_for('list-words') }}" >
+                    <!-- Agrega más opciones según sea necesario -->
                     </datalist>
                 </div>
-                <div  class="col">
+                <div class="col">
                     <label for="wordVariation">Write word:</label>
-                    <input list="wordVariation" id="wordVariationInput" name="wordVariation" class="form-control" required/>
-                    <datalist id="wordVariation" data-api-endpoint="{{ url_for('list-words-classification') }}">
-                        <!-- Agrega más opciones según sea necesario -->
+                    <input list="wordVariation" id="wordVariationInput" name="wordVariation" class="form-control" required />
+                    <datalist id="wordVariation" data-api-endpoint="{{ url_for('list-words-classification') }}" >
+                    <!-- Agrega más opciones según sea necesario -->
                     </datalist>
                 </div>
-                <div  class="col">
+                <div class="col">
                     <label for="wordTypesSelect">Select word types:</label>
-                    <select id="wordTypesSelect" class="form-control" data-api-endpoint="{{ url_for('list-words-types') }}" required>
-                        <option value="" selected disabled>Select a word type</option>
+                    <select id="wordTypesSelect" name="wordTypesSelect" class="form-control" data-api-endpoint="{{ url_for('list-words-types') }}" required >
+                    <option value="" selected disabled>Select a word type</option>
                     </select>
                 </div>
-                <div id="divVerbalTense"  class="col">
+                <div id="divVerbalTense" class="col">
                     <label for="verbalTense">Select verbal tense:</label>
-                    <select id="verbalTense" class="form-control" data-api-endpoint="{{ url_for('list-verbal-tenses') }}">
-                        <option value="" selected disabled>Select a verbal tense</option>
+                    <select id="verbalTense" name="verbalTense" class="form-control" data-api-endpoint="{{ url_for('list-verbal-tenses') }}" >
+                    <option value="" selected disabled>Select a verbal tense</option>
                     </select>
                 </div>
+               
             </div>
-            <div class="m-2 border rounded px-2 pt-2 pb-3 row">
-
+            <div id="divTranslates" class="m-2 border rounded px-2 pt-2 pb-3 row d-none">
+                <label for="translates">Write the translates (separate with commas):</label>
+                <input list="translates" id="translatesInput" name="translates" class="form-control" required />
             </div>
-            <div class="col-2 text-left">
-                <button type="submit" class="btn btn-info me-3">Register</button>
+            <div class="row">
+                <input type="submit" value="Register"/>
             </div>
         </form>
-
-        <div id="divPrueba" class="col">
-            <label for="prueba">Select original word:</label>
-            <input list="prueba" id="pruebaInput" name="prueba" class="form-control" required/>
-            <datalist id="prueba">
-                <option value="Opción 1">
-                <option value="Opción 2">
-                <option value="Opción 3">
-            </datalist>
-            <button onclick="agregarSeleccion()">Agregar</button>
-            <ul id="miLista"></ul>
-        </div>
     </div>
+{% endblock %} 
 
-
-
-
-{% endblock %}
-
-{% block javascript %}
-    {{ super() }}
-
-    <script>
-        function agregarSeleccion() {
-            var input = document.getElementById('pruebaInput');
-            var lista = document.getElementById('prueba');
-            var seleccionActual = input.value;
-
-            // Agregar la selección a la lista, si aún no está presente
-            if (seleccionActual && !lista.innerHTML.includes(seleccionActual)) {
-                lista.innerHTML += `<li>${seleccionActual}</li>`;
-            }
-
-            // Limpiar el input
-            input.value = '';
-        }
-
-        function verificarTecla(event) {
-            // Verificar si la tecla presionada es Enter
-            if (event.key === 'Enter') {
-                agregarSeleccion();
-                return false; // Prevenir cualquier acción predeterminada de Enter
-            }
-        }
-    </script>
+{% block javascript %} 
+{{ super() }}
 
     <script type="module">
-        import { showElement, hideElement, formatAndSetTitle, executeFunctions, getSelectedText } from "{{ url_for('static', path='/js/custom/utilities/utilities.js') }}";
-        import { getOptionElements, showHideSelectElementByValue } from "{{ url_for('static', path='/js/custom/select-apis/selectGetValueApis.js') }}";
+        import {
+            showElement,
+            hideElement,
+            formatAndSetTitle,
+            executeFunctions,
+            getSelectedText,
+            capitalizeFirstLetter
+        } from "{{ url_for('static', path='/js/custom/utilities/utilities.js') }}";
+        import {
+            getOptionElements,
+            showHideSelectElementByValue,
+        } from "{{ url_for('static', path='/js/custom/select-apis/selectGetValueApis.js') }}";
 
-        let selectWordTypesSelect = document.getElementById('wordTypesSelect');
-        let selectVerbalTense = document.getElementById('verbalTense');
+        let selectWordTypesSelect = document.getElementById("wordTypesSelect");
+        let selectVerbalTense = document.getElementById("verbalTense");
 
+        let divOriginalWorld = document.getElementById("divOriginalWord");
+        let inputWordVariation = document.getElementById("wordVariationInput");
+        let inputOriginalWordInput = document.getElementById("originalWordInput");
+        let inputTranslates = document.getElementById("translatesInput");
 
-        let divOriginalWorld = document.getElementById('divOriginalWord');
-        let inputWordVariation = document.getElementById('wordVariationInput');
-        let inputOriginalWordInput = document.getElementById('originalWordInput');
+        let verbValue = "{{verb_select}}";
 
-        let verbValue = '{{verb_select}}'
+        /**
+        * Adds a 'keyup' event listener to the 'inputTranslates' input field.
+        * This event handles the formatting of the input text and controls keystrokes.
+        */
+        inputTranslates.addEventListener("keyup", function (event) {
+            const input = event.target; // Retrieves the input field that triggered the event
+            let value = input.value;    // Retrieves the current value of the input field
+
+            // Capitalizes the first letter of each word and removes unnecessary spaces
+            value = value.split(',')                   // Splits the text into words separated by commas
+                        .map(word => word.trim())      // Removes spaces at the beginning and end of each word
+                        .map(capitalizeFirstLetter)    // Capitalizes the first letter of each word
+                        .join(', ');                   // Joins the words back together, separated by commas
+
+            // If the space key is pressed
+            if (event.keyCode === 32) { 
+                // Adds a comma and a space if the last character is not a comma or a comma followed by a space
+
+                if (!value.endsWith(", ") && !value.endsWith(",")) {
+                    input.value = value + ', ';
+                }
+                event.preventDefault(); // Prevents the default insertion of the space
+            }  else {
+            
+                // Restricts input to only letters and commas
+                const regExp = /[^a-zA-Z,]/g; 
+                if (regExp.test(value)) {
+                    input.value = value.replace(regExp, ' '); // Removes any character that is not a letter or comma
+                }
+            }
+        });
 
         // Event listener for the change event on the wordTypesSelect element
-        selectWordTypesSelect.addEventListener('change', function() {
+        selectWordTypesSelect.addEventListener("change", function () {
             // Show or hide another element based on the selected value
-            showHideSelectElementByValue(
-                {
-                    value: verbValue,
-                    idSelectElement: 'wordTypesSelect',
-                    idElementHtml: 'divVerbalTense',
-                    showFunctions: [
-                        () => {selectVerbalTense.required = true}
-                    ],
-                    hideFunctions: [
-                        () => {
-                            selectVerbalTense.selectedIndex  = 0
-                            selectVerbalTense.required = false
-                        }
-                    ]
-                }
-            )
-
+            showHideSelectElementByValue({
+                value: verbValue,
+                idSelectElement: "wordTypesSelect",
+                idElementHtml: "divVerbalTense",
+                showFunctions: [
+                    () => {
+                        selectVerbalTense.required = true;
+                    },
+                ],
+                hideFunctions: [
+                    () => {
+                        selectVerbalTense.selectedIndex = 0;
+                        selectVerbalTense.required = false;
+                    },
+                ],
+            });
         });
 
         /**
-         * Event listener para el evento de entrada en el elemento inputWordVariation.
-         * Muestra u oculta el divOriginalWord según el valor del input y formatea el título.
-         */
-        inputWordVariation.addEventListener('input', function() {
+        * Event listener para el evento de entrada en el elemento inputWordVariation.
+        * Muestra u oculta el divOriginalWord según el valor del input y formatea el título.
+        */
+        inputWordVariation.addEventListener("input", function () {
             // Obtener el valor del inputWordVariation
-            const inputValue = inputWordVariation.value;
+            let inputValue = inputWordVariation.value;
 
             // Formatear el título y establecerlo para el elemento 'wordVariationInput'
             formatAndSetTitle(inputWordVariation);
 
             // Verificar si el inputWordVariation está vacío
-            if (inputValue !== '') {
-                // Si no está vacío, mostrar el divOriginalWord
-                showElement(
-                    {
-                        idElementHtml: 'divOriginalWord'
-                    }
-                );
+            if (inputValue !== "") {
+            // Si no está vacío, mostrar el divOriginalWord
+            showElement({
+                idElementHtml: "divOriginalWord",
+            });
+            showElement({
+                idElementHtml: "divTranslates",
+            });
             } else {
-                // Si está vacío, ocultar el divOriginalWord
-                hideElement(
-                    {
-                        idElementHtml: 'divOriginalWord',
-                        functions:[
-                            () => {
-                                inputOriginalWordInput.value = ''
-                            }
-                        ]
-                    }
-                );
+            // Si está vacío, ocultar el divOriginalWord
+            hideElement({
+                idElementHtml: "divOriginalWord",
+                functions: [
+                    () => {
+                        inputOriginalWordInput.value = "";
+                    },
+                ],
+            });
+            hideElement({
+                idElementHtml: "divTranslates",
+                functions: [
+                    () => {
+                        inputTranslates.value = "";
+                    },
+                ],
+            });
             }
         });
 
         /**
-         * Event listener para el evento de entrada en el elemento inputWordVariation.
-         * Formatea el título del elemento 'originalWordInput'.
-         */
-        inputOriginalWordInput.addEventListener('input', function() {
+        * Event listener para el evento de entrada en el elemento inputWordVariation.
+        * Formatea el título del elemento 'originalWordInput'.
+        */
+        inputOriginalWordInput.addEventListener("input", function () {
             // Formatear el título y establecerlo para el elemento 'originalWordInput'
             formatAndSetTitle(inputOriginalWordInput);
         });
 
-
         // Get options from the API and add them to specific select elements
-        getOptionElements('wordTypesSelect', 'wordTypesSelect', 'data-api-endpoint')
-        getOptionElements('verbalTense', 'verbalTense', 'data-api-endpoint')
-        getOptionElements('originalWord', 'originalWord', 'data-api-endpoint')
-        getOptionElements('wordVariation', 'wordVariation', 'data-api-endpoint')
+        getOptionElements("wordTypesSelect", "wordTypesSelect", "data-api-endpoint");
+        getOptionElements("verbalTense", "verbalTense", "data-api-endpoint");
+        getOptionElements("originalWord", "originalWord", "data-api-endpoint");
+        getOptionElements("wordVariation", "wordVariation", "data-api-endpoint");
 
         // Show or hide an element based on the selected value in a select element
-        showHideSelectElementByValue(
-            {
-                value: verbValue,
-                idSelectElement: 'wordTypesSelect',
-                idElementHtml: 'divVerbalTense',
-            }
-        )
-
-
+        showHideSelectElementByValue({
+            value: verbValue,
+            idSelectElement: "wordTypesSelect",
+            idElementHtml: "divVerbalTense",
+        });
     </script>
-
 
 {% endblock %}

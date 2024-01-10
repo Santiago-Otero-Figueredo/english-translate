@@ -44,6 +44,15 @@ function formatAndSetTitle(inputElement) {
 }
 
 /**
+ * Capitalizes the first letter of a given string and makes the rest lowercase.
+ * @param {string} string - The string to be capitalized.
+ * @returns {string} The string with its first letter capitalized and the rest in lowercase.
+ */
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+}
+
+/**
  * Executes an array of functions.
  *
  * @param {Function[]} functions - An array of functions to be executed.
@@ -65,4 +74,4 @@ function getSelectedText(idSelectElement) {
     return selectedValue
 }
 
-export { showElement, hideElement, formatAndSetTitle, executeFunctions, getSelectedText }
+export { showElement, hideElement, formatAndSetTitle, executeFunctions, getSelectedText, capitalizeFirstLetter }

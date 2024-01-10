@@ -19,7 +19,7 @@ router = APIRouter(
     prefix='/words',
     tags=['words'],
     responses= {404: {'description': 'Not Found'}}
-)
+) 
 
 
 # @router.get('/list', status_code=status.HTTP_201_CREATED, response_class=HTMLResponse,  name='list-tasks')
@@ -49,13 +49,28 @@ async def list_task(session: Session = Depends(get_session)) -> List[DetailModel
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An error occurred while fetching words")
 
 
-@router.get('/register', status_code=status.HTTP_201_CREATED, response_class=HTMLResponse, name='register-word')
+@router.get('/register', status_code=status.HTTP_200_OK, response_class=HTMLResponse, name='register-word')
 async def register_task(request: Request, session: Session = Depends(get_session)):
 
     context = {}
     context.update({'request': request, 'verb_select':'Verbs'})
 
     return templates.TemplateResponse('words/register.html', context=context)
+
+@router.post('/register', status_code=status.HTTP_201_CREATED, name='register-word')
+async def register_word(request: Request, 
+                        originalWord: str = Form(...), 
+                        wordVariation: str = Form(...), 
+                        wordTypesSelect: str = Form(...), 
+                        verbalTense: Union[str, None] = Form(None), 
+                        translates: str = Form(...),
+                        session: Session = Depends(get_session)):
+    # Lógica para procesar los datos del formulario
+    translates_list = translates.split(',')
+    context = {'request': request}
+
+    return RedirectResponse(url=request.url_for('register-word'), status_code=status.HTTP_303_SEE_OTHER)
+
 
 # @router.post('/register', status_code=status.HTTP_201_CREATED, response_class=HTMLResponse, name='register-word')
 # async def register_task(request: Request,

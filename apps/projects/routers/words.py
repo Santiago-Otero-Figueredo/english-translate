@@ -64,10 +64,20 @@ async def register_word(request: Request,
                         wordTypesSelect: str = Form(...), 
                         verbalTense: Union[str, None] = Form(None), 
                         translates: str = Form(...),
+                        examplesJson: str = Form(...),
+                        example: List[str] = Form(None),
+                        example_translate: List[str] = Form(None),
                         session: Session = Depends(get_session)):
+    import json
     # Lógica para procesar los datos del formulario
     translates_list = translates.split(',')
     context = {'request': request}
+
+    examples = json.loads(examplesJson)
+    print(examples)
+    print(originalWord)
+    print(translates)
+
 
     return RedirectResponse(url=request.url_for('register-word'), status_code=status.HTTP_303_SEE_OTHER)
 

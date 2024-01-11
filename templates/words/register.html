@@ -7,8 +7,8 @@
 
 {% block content %}
     <div class="px-2">
-        <form action="{{ url_for('register-word') }}" method="POST" id="formRegister" class="row">
-            <div class="m-2 border rounded px-2 pt-2 pb-3 row">
+        <form action="{{ url_for('register-word') }}" method="POST" id="formRegister" class="row" onsubmit="submitForm(event)">
+            <div class="border rounded m-2 px-2 pt-2 pb-3 row">
                 <div id="divOriginalWord" class="col d-none">
                     <label for="originalWord">Select original word:</label>
                     <input list="originalWord" id="originalWordInput" name="originalWord" class="form-control" required />
@@ -37,11 +37,21 @@
                 </div>
                
             </div>
-            <div id="divTranslates" class="m-2 border rounded px-2 pt-2 pb-3 row d-none">
+
+            <div id="divTranslates" class="border rounded m-2 px-2 pt-2 pb-3 row d-none">
                 <label for="translates">Write the translates (separate with commas):</label>
-                <input list="translates" id="translatesInput" name="translates" class="form-control" required />
+                <input id="translatesInput" name="translates" class="form-control" required />
             </div>
-            <div class="row">
+
+            <div id="divExamplesContainer" class="m-2 border rounded px-2 pt-2 pb-3 row d-none" >
+                <div class="example-set row my-1">
+                    <textarea name="example" placeholder="Write an example" class="form-control col mx-1" style="resize: none;" rows="3"></textarea>
+                    <textarea name="example_translate" placeholder="Write the translate's example" class="form-control col mx-1" style="resize: none;" rows="3"></textarea>
+                </div>
+            </div>
+            <button type="button" onclick="addExample()">Add More</button>
+
+            <div class="m-2 px-2 pt-2 pb-3 row">
                 <input type="submit" value="Register"/>
             </div>
         </form>
@@ -50,6 +60,67 @@
 
 {% block javascript %} 
 {{ super() }}
+
+    <script>
+        function addExample() {
+            var container = document.getElementById("divExamplesContainer");
+            var newExample = document.querySelector(".example-set").cloneNode(true);
+
+            // Encuentra todos los elementos textarea dentro del div clonado y limpia su valor
+            var textareas = newExample.querySelectorAll("textarea");
+            textareas.forEach(function(textarea) {
+                textarea.value = "";
+                textarea.required = false; // Asegúrate de que los textareas clonados no sean requeridos
+            });
+
+            container.appendChild(newExample);
+
+            assignInputEvents();
+        }
+
+        function assignInputEvents() {
+            document.querySelectorAll('.example-set').forEach(set => {
+                set.querySelectorAll('textarea').forEach(textarea => {
+                    textarea.addEventListener('input', () => {
+                        const textareas = set.querySelectorAll('textarea');
+                        const isAnyFilled = Array.from(textareas).some(ta => ta.value.trim() !== '');
+                        textareas.forEach(ta => ta.required = isAnyFilled);
+                    });
+                });
+            });
+        }
+
+        function submitForm(event) {
+            event.preventDefault();
+            var form = document.getElementById("formRegister");
+            var formData = new FormData(form);
+
+            var exampleSets = document.querySelectorAll(".example-set");
+            var examplesData = [];
+
+            exampleSets.forEach(function(set) {
+                var example = set.querySelector("textarea[name='example']").value;
+                var translate = set.querySelector("textarea[name='example_translate']").value;
+                examplesData.push({ example: example, translate: translate });
+            });
+
+            formData.append('examplesJson', JSON.stringify(examplesData));
+            
+            fetch('{{ url_for("register-word") }}', {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (response.ok && response.redirected) {
+                    window.location.href = '{{ url_for("register-word") }}';
+                } else {
+                    // Manejar otros estados de respuesta o errores
+                    console.error('Error en la solicitud:', response.statusText);
+                }
+            }).catch(error => {
+                console.error('Error al enviar el formulario:', error);
+            });
+        }
+    </script>
 
     <script type="module">
         import {
@@ -75,6 +146,7 @@
 
         let verbValue = "{{verb_select}}";
 
+        assignInputEvents()
         /**
         * Adds a 'keyup' event listener to the 'inputTranslates' input field.
         * This event handles the formatting of the input text and controls keystrokes.
@@ -148,6 +220,9 @@
             showElement({
                 idElementHtml: "divTranslates",
             });
+            showElement({
+                idElementHtml: "divExamplesContainer",
+            });
             } else {
             // Si está vacío, ocultar el divOriginalWord
             hideElement({
@@ -163,6 +238,14 @@
                 functions: [
                     () => {
                         inputTranslates.value = "";
+                    },
+                ],
+            });
+            hideElement({
+                idElementHtml: "divExamplesContainer",
+                functions: [
+                    () => {
+                       ;
                     },
                 ],
             });

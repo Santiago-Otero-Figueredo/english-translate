@@ -7,7 +7,6 @@ function showElement({ idElementHtml, functions = [] }){
     const element = document.getElementById(idElementHtml);
 
     if (element) {
-        element.classList.add('d-block')
         element.classList.remove('d-none')
         executeFunctions(functions)
     }
@@ -23,7 +22,6 @@ function hideElement({ idElementHtml, functions = [] }) {
 
     if (element) {
         element.classList.add('d-none')
-        element.classList.remove('d-block')
         executeFunctions(functions)
     }
 }

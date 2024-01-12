@@ -10,6 +10,8 @@ from core.database import get_session
 # from apps.projects.models import Task, Priority, Project, State
 from apps.projects.models import Word
 from apps.projects.schemas.detail_model import DetailModelRequest
+from apps.projects.schemas.words import WordRegister, ExampleTranslatesRequest
+
 
 from typing import Union, List
 
@@ -65,19 +67,29 @@ async def register_word(request: Request,
                         verbalTense: Union[str, None] = Form(None), 
                         translates: str = Form(...),
                         examplesJson: str = Form(...),
-                        example: List[str] = Form(None),
-                        example_translate: List[str] = Form(None),
                         session: Session = Depends(get_session)):
     import json
     # Lógica para procesar los datos del formulario
-    translates_list = translates.split(',')
+    list_translates = translates.split(',')
     context = {'request': request}
 
-    examples = json.loads(examplesJson)
-    print(examples)
-    print(originalWord)
-    print(translates)
+    list_examples_json = json.loads(examplesJson)
+    list_examples_translations = []
+    for e_t in list_examples_json:
+        example = e_t['example']
+        translate = e_t['translate']
+        list_examples_translations.append(ExampleTranslatesRequest(example=example, translate=translate))
 
+    word_register = WordRegister(
+        rootWord=originalWord,
+        value=wordVariation,
+        idWordTypesSelect=wordTypesSelect,
+        verbalTense=verbalTense,
+        translates=list_translates,
+        examplesJson=list_examples_translations
+    )
+
+    print(word_register)
 
     return RedirectResponse(url=request.url_for('register-word'), status_code=status.HTTP_303_SEE_OTHER)
 

@@ -111,7 +111,8 @@
                 body: formData
             }).then(response => {
                 if (response.ok && response.redirected) {
-                    window.location.href = '{{ url_for("register-word") }}';
+                    console.log('OK')
+                    //window.location.href = '{{ url_for("register-word") }}';
                 } else {
                     // Manejar otros estados de respuesta o errores
                     console.error('Error en la solicitud:', response.statusText);

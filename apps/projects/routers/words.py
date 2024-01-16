@@ -34,7 +34,7 @@ router = APIRouter(
 #         context['color_filter'] = state_result.color
 
 #     context.update(filter)
-#     tasks = await Task.get_by_filter(filter, session, order_by = {'update_at': 'asc'})
+#     tasks = await Task.get_by_filter(session, filter, order_by = {'update_at': 'asc'})
 #     priorities = await Priority.get_all(session)
 #     projects = await Project.get_all(session)
 #     states = await State.get_all(session)
@@ -61,19 +61,19 @@ async def register_task(request: Request, session: Session = Depends(get_session
 
 @router.post('/register', status_code=status.HTTP_201_CREATED, name='register-word')
 async def register_word(request: Request, 
-                        originalWord: str = Form(...), 
-                        wordVariation: str = Form(...), 
-                        wordTypesSelect: str = Form(...), 
-                        verbalTense: Union[str, None] = Form(None), 
+                        original_word: str = Form(...), 
+                        word_variation: str = Form(...), 
+                        word_types_select: str = Form(...), 
+                        verbal_tense: Union[str, None] = Form(None), 
                         translates: str = Form(...),
-                        examplesJson: str = Form(...),
+                        examples_json: str = Form(...),
                         session: Session = Depends(get_session)):
     import json
     # Lógica para procesar los datos del formulario
     list_translates = translates.split(',')
     context = {'request': request}
 
-    list_examples_json = json.loads(examplesJson)
+    list_examples_json = json.loads(examples_json)
     list_examples_translations = []
     for e_t in list_examples_json:
         example = e_t['example']
@@ -81,15 +81,16 @@ async def register_word(request: Request,
         list_examples_translations.append(ExampleTranslatesRequest(example=example, translate=translate))
 
     word_register = WordRegister(
-        rootWord=originalWord,
-        value=wordVariation,
-        idWordTypesSelect=wordTypesSelect,
-        verbalTense=verbalTense,
+        root_word=original_word,
+        value=word_variation,
+        id_word_type=word_types_select,
+        id_verbal_tense=verbal_tense,
         translates=list_translates,
-        examplesJson=list_examples_translations
+        examples_json=list_examples_translations
     )
 
     print(word_register)
+    await Word.register_word_with_translates(session, word_register)
 
     return RedirectResponse(url=request.url_for('register-word'), status_code=status.HTTP_303_SEE_OTHER)
 
@@ -126,7 +127,7 @@ async def register_word(request: Request,
 
 #     context.update(filter)
 #     context['actual_project'] = await Project.get_by_id(project_id, session)
-#     tasks = await Task.get_by_filter(filter, session, order_by = {'update_at': 'desc'})
+#     tasks = await Task.get_by_filter(session, filter, order_by = {'update_at': 'desc'})
 #     priorities = await Priority.get_all(session)
 #     projects = await Project.get_all(session)
 #     states = await State.get_all(session)

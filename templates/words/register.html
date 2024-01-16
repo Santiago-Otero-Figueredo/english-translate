@@ -11,27 +11,27 @@
             <div class="border rounded m-2 px-2 pt-2 pb-3 row">
                 <div id="divOriginalWord" class="col d-none">
                     <label for="originalWord">Select original word:</label>
-                    <input list="originalWord" id="originalWordInput" name="originalWord" class="form-control" required />
+                    <input list="originalWord" id="originalWordInput" name="original_word" class="form-control" required />
                     <datalist id="originalWord" data-api-endpoint="{{ url_for('list-words') }}" >
                     <!-- Agrega más opciones según sea necesario -->
                     </datalist>
                 </div>
                 <div class="col">
                     <label for="wordVariation">Write word:</label>
-                    <input list="wordVariation" id="wordVariationInput" name="wordVariation" class="form-control" required />
+                    <input list="wordVariation" id="wordVariationInput" name="word_variation" class="form-control" required />
                     <datalist id="wordVariation" data-api-endpoint="{{ url_for('list-words-classification') }}" >
                     <!-- Agrega más opciones según sea necesario -->
                     </datalist>
                 </div>
                 <div class="col">
                     <label for="wordTypesSelect">Select word types:</label>
-                    <select id="wordTypesSelect" name="wordTypesSelect" class="form-control" data-api-endpoint="{{ url_for('list-words-types') }}" required >
+                    <select id="wordTypesSelect" name="word_types_select" class="form-control" data-api-endpoint="{{ url_for('list-words-types') }}" required >
                     <option value="" selected disabled>Select a word type</option>
                     </select>
                 </div>
                 <div id="divVerbalTense" class="col">
                     <label for="verbalTense">Select verbal tense:</label>
-                    <select id="verbalTense" name="verbalTense" class="form-control" data-api-endpoint="{{ url_for('list-verbal-tenses') }}" >
+                    <select id="verbalTense" name="verbal_tense" class="form-control" data-api-endpoint="{{ url_for('list-verbal-tenses') }}" >
                     <option value="" selected disabled>Select a verbal tense</option>
                     </select>
                 </div>
@@ -104,7 +104,7 @@
                 examplesData.push({ example: example, translate: translate });
             });
 
-            formData.append('examplesJson', JSON.stringify(examplesData));
+            formData.append('examples_json', JSON.stringify(examplesData));
             
             fetch('{{ url_for("register-word") }}', {
                 method: 'POST',

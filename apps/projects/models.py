@@ -57,6 +57,9 @@ class WordType(DetailModel):
         session.refresh(new_register)
 
 
+
+
+
 class Word(DetailModel):
     __tablename__ = "word"
 
@@ -70,6 +73,67 @@ class Word(DetailModel):
         session.add(new_register)
         session.commit()
         session.refresh(new_register)
+
+    @staticmethod
+    @db_transaction
+    async def register_word_with_translates(session, data):
+        from apps.projects.schemas.words import WordRegister
+        from apps.projects.schemas.words_classification import WordClassificationRegister
+
+        # Crear y añadir la palabra
+        word = await Word.get_by_value(session, data.root_word)
+
+        if not word:
+            # Si la palabra no existe, crear y añadir una nueva
+            word = Word(value=data.root_word)
+            session.add(word)
+            session.commit()
+
+        word_type = await WordType.get_by_id(session, data.id_word_type)
+
+        if not word_type:
+            raise Exception('The word type doesn`t exist')
+
+        if data.id_verbal_tense:
+            verbal_tense = await VerbalTense.get_by_id(session, data.id_verbal_tense)
+            if not verbal_tense:
+                raise Exception('The verbal tense doesn`t exist')
+
+        word_classification = await WordClassification.get_by_value(session, data.value)
+
+        if not word_classification:
+            word_classification = WordClassification(
+                value= data.value,
+                number_of_times_searched = 0,
+                word_type_id= word_type.id,
+                word_id= word.id
+            )
+            session.add(word_classification)
+            session.commit()
+        else:
+            word_classification.number_of_times_searched = word_classification.number_of_times_searched + 1 
+
+        session.commit()
+
+        language = await Language.get_by_value(session, 'English')
+        # Añadir traducciones
+        for translate in data.translates:
+            new_translation = Translation(value=translate, word_classification_id=word_classification.id, language_id=language.id)
+            session.add(new_translation)
+            session.commit()
+
+        # Añadir ejemplos y sus traducciones
+        for example_translation in data.examples_json:
+            new_example = Example(value=example_translation.example, word_classification_id=word_classification.id)
+            session.add(new_example)
+            session.commit()
+            session.refresh(new_example)
+            new_translation = Translation(value=example_translation.translate, word_classification_id=word_classification.id, example_id=new_example.id, language_id=language.id)
+            session.add(new_translation)
+            session.commit()
+
+
+        session.commit()
 
 
 class Example(DetailModel):
@@ -160,6 +224,9 @@ class WordClassification(DetailModel):
         session.add(new_register)
         session.commit()
         session.refresh(new_register)
+
+    
+    
 
 
 

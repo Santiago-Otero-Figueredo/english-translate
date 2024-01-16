@@ -14,9 +14,9 @@ class ExampleTranslatesRequest(BaseModel):
     translate: str
 
 class WordRegister(BaseModel):
-    rootWord: str
+    root_word: str
     value: str
-    idWordTypesSelect: int
-    verbalTense: Union[int, None] = None
+    id_word_type: int
+    id_verbal_tense: Union[int, None] = None
     translates: List[str]
-    examplesJson: List[ExampleTranslatesRequest]
+    examples_json: List[ExampleTranslatesRequest]

@@ -22,7 +22,7 @@ class BaseModel(Base):
         return self.created_at.strftime('%Y-%m-%d %H:%M')
 
     @classmethod
-    async def get_by_id(cls, id_search: int, session):
+    async def get_by_id(cls, session, id_search: int):
         return session.query(cls).filter(cls.id == id_search).first()
 
     @classmethod
@@ -30,7 +30,7 @@ class BaseModel(Base):
         return session.query(cls).order_by(cls.created_at).all()
 
     @classmethod
-    async def get_by_filter(cls, filters: dict, session, order_by:dict = {}):
+    async def get_by_filter(cls, session, filters: dict, order_by:dict = {}):
         query = session.query(cls)
 
         if filters:
@@ -61,10 +61,10 @@ class DetailModel(BaseModel):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     value: Mapped[str] = mapped_column(String(50))
     #description: Mapped[Union[str, None]]
-
+    
     @classmethod
     async def get_by_value(cls, session, name: str):
-        return session.query(cls).filter(cls.name == name).first()
+        return session.query(cls).filter(cls.value == name).first()
 
     @classmethod
     def exists_by_value(cls, session, value: int):

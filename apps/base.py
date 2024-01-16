@@ -63,15 +63,20 @@ class DetailModel(BaseModel):
     #description: Mapped[Union[str, None]]
     
     @classmethod
-    async def get_by_value(cls, session, name: str):
-        return session.query(cls).filter(cls.value == name).first()
+    async def get_by_value(cls, session, value: str, case_sensitive: bool = True):
+        if case_sensitive:
+            return session.query(cls).filter(cls.value == value).first()
+        else:
+            return session.query(cls).filter(func.lower(cls.value) == func.lower(value)).first()
 
     @classmethod
-    def exists_by_value(cls, session, value: int):
-
-        if session.query(cls).filter(cls.value == value).first():
-            return True
-        return False
+    def exists_by_value(cls, session, value: str, case_sensitive: bool = True):
+        if case_sensitive:
+            query = session.query(cls).filter(cls.value == value)
+        else:
+            query = session.query(cls).filter(func.lower(cls.value) == func.lower(value))
+        
+        return session.query(query.exists()).scalar()
 
 
 

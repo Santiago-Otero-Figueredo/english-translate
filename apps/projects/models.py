@@ -80,6 +80,8 @@ class Word(DetailModel):
         from apps.projects.schemas.words import WordRegister
         from apps.projects.schemas.words_classification import WordClassificationRegister
 
+        word_type_verb = await WordType.get_by_value(session, 'Verbs')
+
         # Crear y añadir la palabra
         word = await Word.get_by_value(session, data.root_word)
 
@@ -93,6 +95,8 @@ class Word(DetailModel):
 
         if not word_type:
             raise Exception('The word type doesn`t exist')
+        
+
 
         if data.id_verbal_tense:
             verbal_tense = await VerbalTense.get_by_id(session, data.id_verbal_tense)
@@ -102,12 +106,21 @@ class Word(DetailModel):
         word_classification = await WordClassification.get_by_value(session, data.value)
 
         if not word_classification:
-            word_classification = WordClassification(
-                value= data.value,
-                number_of_times_searched = 0,
-                word_type_id= word_type.id,
-                word_id= word.id
-            )
+            if word_type_verb.id == word_type_verb.id:
+                word_classification = Verb(
+                    value=data.value,
+                    number_of_times_searched=1,
+                    word_type_id=word_type.id,
+                    verbal_tense_id=data.id_verbal_tense,
+                    word_id=word.id
+                )
+            else:
+                word_classification = WordClassification(
+                    value=data.value,
+                    number_of_times_searched=1,
+                    word_type_id=word_type.id,
+                    word_id= word.id
+                )
             session.add(word_classification)
             session.commit()
         else:

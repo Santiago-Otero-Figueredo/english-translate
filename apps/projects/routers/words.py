@@ -8,12 +8,14 @@ from fastapi.templating import Jinja2Templates
 from core.database import get_session
 
 # from apps.projects.models import Task, Priority, Project, State
-from apps.projects.models import Word
+from apps.projects.models import Word, WordClassification, WordType, Verb
 from apps.projects.schemas.detail_model import DetailModelRequest
-from apps.projects.schemas.words import WordRegister, ExampleTranslatesRequest
-
+from apps.projects.schemas.words import WordRegister, ExampleTranslatesRequest, WordSearchRequest, TranslationRequest, ExampleRequest
 
 from typing import Union, List
+
+import json
+
 
 templates = Jinja2Templates(directory='templates/')
 
@@ -68,16 +70,13 @@ async def register_word(request: Request,
                         translates: str = Form(...),
                         examples_json: str = Form(...),
                         session: Session = Depends(get_session)):
-    import json
     # Lógica para procesar los datos del formulario
     list_translates = translates.split(',')
-    context = {'request': request}
-
     list_examples_json = json.loads(examples_json)
     list_examples_translations = []
     for e_t in list_examples_json:
-        example = e_t['example']
-        translate = e_t['translate']
+        example = e_t['example'].strip()
+        translate = e_t['translate'].strip()
         list_examples_translations.append(ExampleTranslatesRequest(example=example, translate=translate))
 
     word_register = WordRegister(
@@ -89,12 +88,70 @@ async def register_word(request: Request,
         examples_json=list_examples_translations
     )
 
-    print(word_register)
     await Word.register_word_with_translates(session, word_register)
 
     return RedirectResponse(url=request.url_for('register-word'), status_code=status.HTTP_303_SEE_OTHER)
 
 
+@router.get('/get/{word_search}', status_code=status.HTTP_200_OK, response_model=WordSearchRequest)
+async def search_word(word_search: str, session: Session = Depends(get_session)):
+    word_info = await WordClassification.get_by_value(session, word_search, case_sensitive=False)
+
+    word_type = await WordType.get_by_value(session, 'Verbs')
+
+    if word_info:
+        raise HTTPException(status_code=404, detail="Word not found")
+
+    id_verbal_tense = None
+    if word_info.word_type_id == word_type.id:
+        word_info = await Verb.get_by_value(session, word_search, case_sensitive=False)
+        
+        id_verbal_tense = word_info.verbal_tense_id
+
+    
+    if word_info:
+
+        translates = []
+
+        translations_without_examples = [translation for translation in word_info.translations if translation.example_id is None]
+
+        for translate_word in translations_without_examples:
+            translates.append(
+                TranslationRequest(
+                    id=translate_word.id,
+                    value=translate_word.value,
+                    description=translate_word.description
+                )
+            )
+
+        examples = []
+        for example_word in word_info.examples:
+            examples.append(
+                ExampleRequest(
+                    id=example_word.id,
+                    value=example_word.value,
+                    translation=  TranslationRequest(
+                        id=example_word.translation.id,
+                        value=example_word.translation.value,
+                        description=example_word.translation.description
+                    )
+                )
+            )
+
+        word_found = WordSearchRequest(
+            id=word_info.id,
+            id_root_word=word_info.word_id,
+            value=word_info.value,
+            id_word_type=word_info.word_type_id,
+            id_verbal_tense= id_verbal_tense,
+            number_of_times_searched=word_info.number_of_times_searched,
+            translates=translates,
+            examples_json=examples
+        )
+
+        return word_found
+    else:
+        raise HTTPException(status_code=404, detail="Word not found")
 # @router.post('/register', status_code=status.HTTP_201_CREATED, response_class=HTMLResponse, name='register-word')
 # async def register_task(request: Request,
 #                             name:str = Form(),

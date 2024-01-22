@@ -71,13 +71,15 @@ async def register_word(request: Request,
                         examples_json: str = Form(...),
                         session: Session = Depends(get_session)):
     # Lógica para procesar los datos del formulario
+
     list_translates = translates.split(',')
     list_examples_json = json.loads(examples_json)
     list_examples_translations = []
     for e_t in list_examples_json:
         example = e_t['example'].strip()
         translate = e_t['translate'].strip()
-        list_examples_translations.append(ExampleTranslatesRequest(example=example, translate=translate))
+        description = e_t['description'].strip()
+        list_examples_translations.append(ExampleTranslatesRequest(example=example, translate=translate, description=description))
 
     word_register = WordRegister(
         root_word=original_word,
@@ -93,13 +95,12 @@ async def register_word(request: Request,
     return RedirectResponse(url=request.url_for('register-word'), status_code=status.HTTP_303_SEE_OTHER)
 
 
-@router.get('/get/{word_search}', status_code=status.HTTP_200_OK, response_model=WordSearchRequest)
+@router.get('/get/{word_search}', status_code=status.HTTP_200_OK, response_model=WordSearchRequest, name='get-info-word')
 async def search_word(word_search: str, session: Session = Depends(get_session)):
     word_info = await WordClassification.get_by_value(session, word_search, case_sensitive=False)
-
     word_type = await WordType.get_by_value(session, 'Verbs')
 
-    if word_info:
+    if not word_info:
         raise HTTPException(status_code=404, detail="Word not found")
 
     id_verbal_tense = None

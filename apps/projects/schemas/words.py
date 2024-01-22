@@ -22,6 +22,7 @@ class ExampleRequest(BaseModel):
 class ExampleTranslatesRequest(BaseModel):
     example: str
     translate: str
+    description: Union[str, None] = ''
 
 
 

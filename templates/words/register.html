@@ -23,7 +23,7 @@
                     <!-- Agrega más opciones según sea necesario -->
                     </datalist>
                 </div>
-                <div class="col">
+                <div id="divWordTypesSelect" class="col d-none">
                     <label for="wordTypesSelect">Select word types:</label>
                     <select id="wordTypesSelect" name="word_types_select" class="form-control" data-api-endpoint="{{ url_for('list-words-types') }}" required >
                     <option value="" selected disabled>Select a word type</option>
@@ -35,7 +35,6 @@
                     <option value="" selected disabled>Select a verbal tense</option>
                     </select>
                 </div>
-               
             </div>
 
             <div id="divTranslates" class="border rounded m-2 px-2 pt-2 pb-3 row d-none">
@@ -47,6 +46,7 @@
                 <div class="example-set row my-1">
                     <textarea name="example" placeholder="Write an example" class="form-control col mx-1" style="resize: none;" rows="3"></textarea>
                     <textarea name="example_translate" placeholder="Write the translate's example" class="form-control col mx-1" style="resize: none;" rows="3"></textarea>
+                    <textarea name="description_example_translate" placeholder="Write the translate's description" class="form-control col mx-1" style="resize: none;" rows="3"></textarea>
                 </div>
             </div>
             <button type="button" onclick="addExample()">Add More</button>
@@ -101,7 +101,9 @@
             exampleSets.forEach(function(set) {
                 var example = set.querySelector("textarea[name='example']").value;
                 var translate = set.querySelector("textarea[name='example_translate']").value;
-                examplesData.push({ example: example, translate: translate });
+                var description = set.querySelector("textarea[name='description_example_translate']").value;
+
+                examplesData.push({ example: example, translate: translate, description:description});
             });
 
             formData.append('examples_json', JSON.stringify(examplesData));
@@ -136,6 +138,9 @@
             getOptionElements,
             showHideSelectElementByValue,
         } from "{{ url_for('static', path='/js/custom/select-apis/selectGetValueApis.js') }}";
+        import {
+            apiGetRequest,
+        } from "{{ url_for('static', path='/js/custom/apis/getRequest.js') }}";
 
         let selectWordTypesSelect = document.getElementById("wordTypesSelect");
         let selectVerbalTense = document.getElementById("verbalTense");
@@ -146,6 +151,12 @@
         let inputTranslates = document.getElementById("translatesInput");
 
         let verbValue = "{{verb_select}}";
+
+
+        let url_get_info_word = "{{ url_for('get-info-word', word_search='EXAMPLE') }}"
+        
+
+        apiGetRequest(url_get_info_word, 'meet')
 
         assignInputEvents()
         /**
@@ -215,41 +226,43 @@
             // Verificar si el inputWordVariation está vacío
             if (inputValue !== "") {
             // Si no está vacío, mostrar el divOriginalWord
-            showElement({
-                idElementHtml: "divOriginalWord",
-            });
-            showElement({
-                idElementHtml: "divTranslates",
-            });
-            showElement({
-                idElementHtml: "divExamplesContainer",
-            });
+                showElement({
+                    idElementHtml: "divOriginalWord",
+                });
+                showElement({
+                    idElementHtml: "divTranslates",
+                });
+                showElement({
+                    idElementHtml: "divExamplesContainer",
+                });
+                showElement({
+                    idElementHtml: "divWordTypesSelect",
+                });
             } else {
             // Si está vacío, ocultar el divOriginalWord
-            hideElement({
-                idElementHtml: "divOriginalWord",
-                functions: [
-                    () => {
-                        inputOriginalWordInput.value = "";
-                    },
-                ],
-            });
-            hideElement({
-                idElementHtml: "divTranslates",
-                functions: [
-                    () => {
-                        inputTranslates.value = "";
-                    },
-                ],
-            });
-            hideElement({
-                idElementHtml: "divExamplesContainer",
-                functions: [
-                    () => {
-                       ;
-                    },
-                ],
-            });
+                hideElement({
+                    idElementHtml: "divOriginalWord",
+                    functions: [
+                        () => {
+                            inputOriginalWordInput.value = "";
+                        },
+                    ],
+                });
+                hideElement({
+                    idElementHtml: "divTranslates",
+                    functions: [
+                        () => {
+                            inputTranslates.value = "";
+                        },
+                    ],
+                });
+                hideElement({
+                    idElementHtml: "divExamplesContainer",
+                });
+                hideElement({
+                    idElementHtml: "divWordTypesSelect",
+                   
+                });
             }
         });
 

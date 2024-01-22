@@ -141,7 +141,7 @@ class Word(DetailModel):
             session.add(new_example)
             session.commit()
             session.refresh(new_example)
-            new_translation = Translation(value=example_translation.translate, word_classification_id=word_classification.id, example_id=new_example.id, language_id=language.id)
+            new_translation = Translation(value=example_translation.translate, description=example_translation.description, word_classification_id=word_classification.id, example_id=new_example.id, language_id=language.id)
             session.add(new_translation)
             session.commit()
 

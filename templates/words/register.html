@@ -10,6 +10,8 @@
         <form action="{{ url_for('register-word') }}" method="POST" id="formRegister" class="row" onsubmit="submitForm(event)">
             <div class="border rounded m-2 px-2 pt-2 pb-3 row">
                 <div id="divOriginalWord" class="col d-none">
+                    <input id="idValueOriginalWordInput" name="id_original_word" class="form-control d-none" />
+
                     <label for="originalWord">Select original word:</label>
                     <input list="originalWord" id="originalWordInput" name="original_word" class="form-control" required />
                     <datalist id="originalWord" data-api-endpoint="{{ url_for('list-words') }}" >
@@ -17,6 +19,8 @@
                     </datalist>
                 </div>
                 <div class="col">
+                    <input id="idValueWordVariation" name="id_word_variation" class="form-control d-none" />
+
                     <label for="wordVariation">Write word:</label>
                     <input list="wordVariation" id="wordVariationInput" name="word_variation" class="form-control" required />
                     <datalist id="wordVariation" data-api-endpoint="{{ url_for('list-words-classification') }}" >
@@ -44,12 +48,17 @@
 
             <div id="divExamplesContainer" class="m-2 border rounded px-2 pt-2 pb-3 row d-none" >
                 <div class="example-set row my-1">
+                    <input name="id_example" class="form-control d-none" value="" />
+                    <input name="id_translate" class="form-control d-none" value="" />
                     <textarea name="example" placeholder="Write an example" class="form-control col mx-1" style="resize: none;" rows="3"></textarea>
                     <textarea name="example_translate" placeholder="Write the translate's example" class="form-control col mx-1" style="resize: none;" rows="3"></textarea>
                     <textarea name="description_example_translate" placeholder="Write the translate's description" class="form-control col mx-1" style="resize: none;" rows="3"></textarea>
                 </div>
+
             </div>
-            <button type="button" onclick="addExample()">Add More</button>
+            <div>
+                <button type="button" onclick="addExample()">Add More</button>
+            </div>
 
             <div class="m-2 px-2 pt-2 pb-3 row">
                 <input type="submit" value="Register"/>
@@ -80,9 +89,9 @@
 
         function assignInputEvents() {
             document.querySelectorAll('.example-set').forEach(set => {
-                set.querySelectorAll('textarea').forEach(textarea => {
+                set.querySelectorAll("textarea:not([name='description_example_translate'])").forEach(textarea => {
                     textarea.addEventListener('input', () => {
-                        const textareas = set.querySelectorAll('textarea');
+                        const textareas = set.querySelectorAll("textarea:not([name='description_example_translate'])");
                         const isAnyFilled = Array.from(textareas).some(ta => ta.value.trim() !== '');
                         textareas.forEach(ta => ta.required = isAnyFilled);
                     });
@@ -92,21 +101,33 @@
 
         function submitForm(event) {
             event.preventDefault();
-            var form = document.getElementById("formRegister");
-            var formData = new FormData(form);
+            let form = document.getElementById("formRegister");
+            let formData = new FormData(form);
 
-            var exampleSets = document.querySelectorAll(".example-set");
-            var examplesData = [];
+            let exampleSets = document.querySelectorAll(".example-set");
+            let examplesData = [];
+            
 
             exampleSets.forEach(function(set) {
-                var example = set.querySelector("textarea[name='example']").value;
-                var translate = set.querySelector("textarea[name='example_translate']").value;
-                var description = set.querySelector("textarea[name='description_example_translate']").value;
+                let id_example = set.querySelector("input[name='id_example']").value;
+                let id_translate = set.querySelector("input[name='id_translate']").value;
 
-                examplesData.push({ example: example, translate: translate, description:description});
+                let example = set.querySelector("textarea[name='example']").value;
+                let translate = set.querySelector("textarea[name='example_translate']").value;
+                let description = set.querySelector("textarea[name='description_example_translate']").value;
+
+                examplesData.push({
+                    id_example:id_example,
+                    example: example, 
+                    id_translate:id_translate,
+                    translate: translate, 
+                    description:description
+                });
             });
 
             formData.append('examples_json', JSON.stringify(examplesData));
+
+
             
             fetch('{{ url_for("register-word") }}', {
                 method: 'POST',
@@ -155,8 +176,84 @@
 
         let url_get_info_word = "{{ url_for('get-info-word', word_search='EXAMPLE') }}"
         
+        function getDataFromWord({findWord=""}){
+            apiGetRequest(url_get_info_word, findWord).then(wordInfo => {
+                if (wordInfo !== null) {
+                    hideAllElements()
+                    showElement({idElementHtml: "divOriginalWord"});
+                    showElement({idElementHtml: "divTranslates"});
+                    showElement({idElementHtml: "divExamplesContainer"});
+                    showElement({idElementHtml: "divWordTypesSelect"});
+                    initializeEventListenerWordType()
 
-        apiGetRequest(url_get_info_word, 'meet')
+                    if(wordInfo.id_verbal_tense){
+                        showElement({
+                            idElementHtml: "divVerbalTense",
+                            functions: [
+                                () => {
+                                    selectVerbalTense.required = true;
+                                },
+                            ]
+                        });
+                        let select_verbal_tense = document.getElementById('verbalTense')
+                        select_verbal_tense.value = wordInfo.id_verbal_tense;
+                    }
+            
+                    let input_id_root_word = document.getElementById('idValueOriginalWordInput')
+                    input_id_root_word.value = wordInfo.id_root_word
+
+                    let input_id_word_variation = document.getElementById('idValueWordVariation')
+                    input_id_word_variation.value = wordInfo.id_word_classification
+                    
+                    let input_root_word = document.getElementById('originalWordInput')
+                    input_root_word.value = wordInfo.value_root_word
+
+                    let input_word_variation = document.getElementById('wordVariationInput')
+                    input_word_variation.value = wordInfo.value_word_classification
+                    
+                    let select_word_type = document.getElementById('wordTypesSelect')
+                    select_word_type.value = wordInfo.id_word_type;
+                
+                    let translates_values = ''
+                    wordInfo.translates.forEach(function(element){
+                        translates_values = wordInfo.translates.map(element => element.value).join(', ');
+                    })
+                    
+                    let input_translates = document.getElementById('translatesInput')
+                    input_translates.value = translates_values;
+
+                    for(let i=1; i<wordInfo.examples_json.length; i++){
+                        addExample()
+                    }
+
+                    let exampleSets = document.querySelectorAll(".example-set");
+                    let example_translations_list = wordInfo.examples_json
+                    
+                    exampleSets.forEach(function(set, index) {
+                        let example_translation_element = example_translations_list[index]
+
+                        let id_example = set.querySelector("input[name='id_example']");
+                        id_example.value = example_translation_element.id
+
+                        let example = set.querySelector("textarea[name='example']");
+                        example.value = example_translation_element.value
+
+                        let id_translate = set.querySelector("input[name='id_translate']");
+                        id_translate.value = example_translation_element.translation.id
+
+
+                        let translate = set.querySelector("textarea[name='example_translate']");
+                        translate.value = example_translation_element.translation.value
+
+                        let description = set.querySelector("textarea[name='description_example_translate']");
+                        description.value = example_translation_element.translation.description
+                    
+                    });
+                }
+            });
+        }
+
+        
 
         assignInputEvents()
         /**
@@ -192,80 +289,137 @@
         });
 
         // Event listener for the change event on the wordTypesSelect element
-        selectWordTypesSelect.addEventListener("change", function () {
-            // Show or hide another element based on the selected value
-            showHideSelectElementByValue({
-                value: verbValue,
-                idSelectElement: "wordTypesSelect",
-                idElementHtml: "divVerbalTense",
-                showFunctions: [
-                    () => {
-                        selectVerbalTense.required = true;
-                    },
-                ],
-                hideFunctions: [
-                    () => {
-                        selectVerbalTense.selectedIndex = 0;
-                        selectVerbalTense.required = false;
-                    },
-                ],
+        function initializeEventListenerWordType(){
+            selectWordTypesSelect.addEventListener("change", function () {
+                // Show or hide another element based on the selected value
+                showHideSelectElementByValue({
+                    value: verbValue,
+                    idSelectElement: "wordTypesSelect",
+                    idElementHtml: "divVerbalTense",
+                    showFunctions: [
+                        () => {
+                            selectVerbalTense.required = true;
+                        },
+                    ],
+                    hideFunctions: [
+                        () => {
+                            selectVerbalTense.selectedIndex = 0;
+                            selectVerbalTense.required = false;
+                        },
+                    ],
+                });
             });
-        });
+        }
+        initializeEventListenerWordType()
+
+
 
         /**
         * Event listener para el evento de entrada en el elemento inputWordVariation.
         * Muestra u oculta el divOriginalWord según el valor del input y formatea el título.
         */
-        inputWordVariation.addEventListener("input", function () {
+        inputWordVariation.addEventListener("keydown", function (event) {
             // Obtener el valor del inputWordVariation
-            let inputValue = inputWordVariation.value;
 
-            // Formatear el título y establecerlo para el elemento 'wordVariationInput'
-            formatAndSetTitle(inputWordVariation);
-
-            // Verificar si el inputWordVariation está vacío
-            if (inputValue !== "") {
-            // Si no está vacío, mostrar el divOriginalWord
-                showElement({
-                    idElementHtml: "divOriginalWord",
-                });
-                showElement({
-                    idElementHtml: "divTranslates",
-                });
-                showElement({
-                    idElementHtml: "divExamplesContainer",
-                });
-                showElement({
-                    idElementHtml: "divWordTypesSelect",
-                });
-            } else {
-            // Si está vacío, ocultar el divOriginalWord
-                hideElement({
-                    idElementHtml: "divOriginalWord",
-                    functions: [
-                        () => {
-                            inputOriginalWordInput.value = "";
-                        },
-                    ],
-                });
-                hideElement({
-                    idElementHtml: "divTranslates",
-                    functions: [
-                        () => {
-                            inputTranslates.value = "";
-                        },
-                    ],
-                });
-                hideElement({
-                    idElementHtml: "divExamplesContainer",
-                });
-                hideElement({
-                    idElementHtml: "divWordTypesSelect",
-                   
-                });
+            if (event.key === ' ' || event.key === 'Enter') {
+                // Obtiene el valor del input en este punto
+                let valorInput = this.value.trim();
+                // Llama a la función deseada pasando el valor del input
+                if(valorInput){
+                    getDataFromWord({findWord:valorInput});
+                }
             }
+           
+            setTimeout(() => {
+                let inputValue = inputWordVariation.value;
+
+                // Formatear el título y establecerlo para el elemento 'wordVariationInput'
+                formatAndSetTitle(inputWordVariation);
+                // Verificar si el inputWordVariation está vacío
+                if (inputValue !== "") {
+                    // Si no está vacío, mostrar el divOriginalWord
+                    showElement({
+                        idElementHtml: "divOriginalWord",
+                    });
+                    showElement({
+                        idElementHtml: "divTranslates",
+                    });
+                    showElement({
+                        idElementHtml: "divExamplesContainer",
+                    });
+                    showElement({
+                        idElementHtml: "divWordTypesSelect",
+                    });
+                } else {
+                    hideAllElements()
+                    
+                }
+            }, 0);
         });
 
+        function hideAllElements(){
+            // Si está vacío, ocultar el divOriginalWord
+            hideElement({
+                idElementHtml: "divVerbalTense",
+                functions: [
+                    () => {
+                        selectVerbalTense.selectedIndex = 0;
+                        selectVerbalTense.required = false;
+                    },
+                ]
+            });
+
+            hideElement({
+                idElementHtml: "divOriginalWord",
+                functions: [
+                    () => {
+                        inputOriginalWordInput.value = "";
+                    },
+                ],
+            });
+            hideElement({
+                idElementHtml: "divTranslates",
+                functions: [
+                    () => {
+                        inputTranslates.value = "";
+                    },
+                ],
+            });
+            hideElement({
+                idElementHtml: "divExamplesContainer",
+            });
+            hideElement({
+                idElementHtml: "divWordTypesSelect",
+            });
+
+            cleanExamplesSet()
+
+        }
+
+        function cleanExamplesSet(){
+            // Seleccionar el contenedor divExamplesContainer
+            let container = document.getElementById('divExamplesContainer');
+
+            // Seleccionar todos los elementos con la clase example-set dentro del contenedor
+            let exampleSets = container.getElementsByClassName('example-set');
+
+            // Convertir HTMLCollection a un arreglo para poder iterar (omitir el primer elemento)
+            let exampleSetsArray = Array.from(exampleSets).slice(1);
+
+            // Eliminar todos los elementos example-set excepto el primero
+            exampleSetsArray.forEach(element => {
+                element.remove();
+            });
+
+            if (exampleSets.length > 0) {
+                let firstExampleSet = exampleSets[0];
+                let inputs = firstExampleSet.getElementsByTagName('input');
+                let textareas = firstExampleSet.getElementsByTagName('textarea');
+
+                Array.from(inputs).forEach(input => input.value = '');
+                Array.from(textareas).forEach(textarea => textarea.value = '');
+            }
+        }
         /**
         * Event listener para el evento de entrada en el elemento inputWordVariation.
         * Formatea el título del elemento 'originalWordInput'.

@@ -5,6 +5,9 @@ from typing import Union
 from datetime import datetime
 
 from core.database import Base
+
+from apps.projects.decorators.register import db_transaction
+
 # Definición de las tablas
 
 
@@ -62,6 +65,20 @@ class DetailModel(BaseModel):
     value: Mapped[str] = mapped_column(String(50))
     #description: Mapped[Union[str, None]]
     
+    @db_transaction
+    async def update(self, session, **kwargs):
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
+        session.commit()
+        session.refresh(self)
+
+    @db_transaction
+    def delete(self, session):
+        session.delete(self)
+        session.commit()
+
     @classmethod
     async def get_by_value(cls, session, value: str, case_sensitive: bool = True):
         if case_sensitive:

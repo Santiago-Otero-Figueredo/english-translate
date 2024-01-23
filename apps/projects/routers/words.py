@@ -10,7 +10,7 @@ from core.database import get_session
 # from apps.projects.models import Task, Priority, Project, State
 from apps.projects.models import Word, WordClassification, WordType, Verb
 from apps.projects.schemas.detail_model import DetailModelRequest
-from apps.projects.schemas.words import WordRegister, ExampleTranslatesRequest, WordSearchRequest, TranslationRequest, ExampleRequest
+from apps.projects.schemas.words import WordRegister, WordCompleteInfoRegister, ExampleTranslatesRequest, WordSearchRequest, TranslationRequest, ExampleRequest
 
 from typing import Union, List
 
@@ -63,7 +63,9 @@ async def register_task(request: Request, session: Session = Depends(get_session
 
 @router.post('/register', status_code=status.HTTP_201_CREATED, name='register-word')
 async def register_word(request: Request, 
+                        id_original_word: Union[str, None] = Form(None),
                         original_word: str = Form(...), 
+                        id_word_variation: Union[str, None] = Form(None),
                         word_variation: str = Form(...), 
                         word_types_select: str = Form(...), 
                         verbal_tense: Union[str, None] = Form(None), 
@@ -79,11 +81,21 @@ async def register_word(request: Request,
         example = e_t['example'].strip()
         translate = e_t['translate'].strip()
         description = e_t['description'].strip()
-        list_examples_translations.append(ExampleTranslatesRequest(example=example, translate=translate, description=description))
+        id_example = int(e_t['id_example'].strip()) if e_t['id_example'].strip() != '' else None
+        id_translate = int(e_t['id_translate'].strip()) if e_t['id_translate'].strip() != '' else None
+        list_examples_translations.append(
+            ExampleTranslatesRequest(
+                id_example=id_example,
+                id_translate=id_translate,
+                example=example,
+                translate=translate,
+                description=description
+            )
+        )
 
-    word_register = WordRegister(
-        root_word=original_word,
-        value=word_variation,
+    word_register = WordCompleteInfoRegister(
+        root_word=WordRegister(id=id_original_word, value=original_word),
+        word_classification=WordRegister(id=id_word_variation, value=word_variation),
         id_word_type=word_types_select,
         id_verbal_tense=verbal_tense,
         translates=list_translates,
@@ -120,7 +132,7 @@ async def search_word(word_search: str, session: Session = Depends(get_session))
             translates.append(
                 TranslationRequest(
                     id=translate_word.id,
-                    value=translate_word.value,
+                    value=translate_word.value.strip(),
                     description=translate_word.description
                 )
             )
@@ -140,9 +152,10 @@ async def search_word(word_search: str, session: Session = Depends(get_session))
             )
 
         word_found = WordSearchRequest(
-            id=word_info.id,
+            id_word_classification=word_info.id,
+            value_word_classification=word_info.value,
             id_root_word=word_info.word_id,
-            value=word_info.value,
+            value_root_word=word_info.word.value,
             id_word_type=word_info.word_type_id,
             id_verbal_tense= id_verbal_tense,
             number_of_times_searched=word_info.number_of_times_searched,
@@ -150,6 +163,7 @@ async def search_word(word_search: str, session: Session = Depends(get_session))
             examples_json=examples
         )
 
+      
         return word_found
     else:
         raise HTTPException(status_code=404, detail="Word not found")

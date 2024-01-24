@@ -81,6 +81,12 @@
                 textarea.value = "";
                 textarea.required = false; // Asegúrate de que los textareas clonados no sean requeridos
             });
+            
+            var inputs = newExample.querySelectorAll("input");
+            inputs.forEach(function(textarea) {
+                textarea.value = "";
+                textarea.required = false; // Asegúrate de que los textareas clonados no sean requeridos
+            });
 
             container.appendChild(newExample);
 
@@ -124,7 +130,8 @@
                     description:description
                 });
             });
-
+            
+        
             formData.append('examples_json', JSON.stringify(examplesData));
 
 

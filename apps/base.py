@@ -75,7 +75,7 @@ class DetailModel(BaseModel):
         session.refresh(self)
 
     @db_transaction
-    def delete(self, session):
+    async def delete(self, session):
         session.delete(self)
         session.commit()
 

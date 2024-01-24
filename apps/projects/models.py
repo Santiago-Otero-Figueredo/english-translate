@@ -1,6 +1,5 @@
 from sqlalchemy import CheckConstraint, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
 from core.database import get_session
 
 from typing import TYPE_CHECKING, List, Union
@@ -88,15 +87,15 @@ class Word(DetailModel):
         data_root_word = data.root_word
 
         if data_root_word.id:
-            word = await Word.get_by_id(data_root_word.id)
-            if word.value != data_root_word.value:
-                word.update(session, **{'value':data_root_word.value})
+            word = await Word.get_by_id(session, data_root_word.id)
+            if word.value != data_root_word.value.strip():
+                await word.update(session, **{'value': data_root_word.value.strip()})
         else:
-            word = await Word.get_by_value(session, data_root_word.value)
+            word = await Word.get_by_value(session, data_root_word.value.strip())
 
         if not word:
             # Si la palabra no existe, crear y añadir una nueva
-            word = Word(value=data_root_word.value)
+            word = Word(value=data_root_word.value.strip())
             session.add(word)
             session.commit()
 
@@ -115,16 +114,16 @@ class Word(DetailModel):
         data_word_classification = data.word_classification
         
         if data_word_classification.id:
-            word_classification = await WordClassification.get_by_id(data_word_classification.id)
-            if word_classification.value != data_word_classification.value:
-                word_classification.update(session, **{'value':data_word_classification.value})
+            word_classification = await WordClassification.get_by_id(session, data_word_classification.id)
+            if word_classification.value != data_word_classification.value.strip():
+                await word_classification.update(session, **{'value':data_word_classification.value.strip()})
         else:
-            word_classification = await WordClassification.get_by_value(session, data_word_classification.value)
+            word_classification = await WordClassification.get_by_value(session, data_word_classification.value.strip())
 
         if not word_classification:
             if word_type_verb.id == word_type.id:
                 word_classification = Verb(
-                    value=data_word_classification.value,
+                    value=data_word_classification.value.strip(),
                     number_of_times_searched=1,
                     word_type_id=word_type.id,
                     verbal_tense_id=data.id_verbal_tense,
@@ -132,7 +131,7 @@ class Word(DetailModel):
                 )
             else:
                 word_classification = WordClassification(
-                    value=data_word_classification.value,
+                    value=data_word_classification.value.strip(),
                     number_of_times_searched=1,
                     word_type_id=word_type.id,
                     word_id= word.id
@@ -142,27 +141,27 @@ class Word(DetailModel):
         else:
             word_classification.number_of_times_searched = word_classification.number_of_times_searched + 1 
 
-            if word_classification.word_type_id != word_type.id:
-                word_classification.update(session, **{'word_type_id':word_type.id})
-                old_verb_record = Verb.get_by_id(word_classification.id)
-                old_verb_record.delete(session)
+            if word_type_verb.id == data.id_word_type:
+                actual_verb_record = await Verb.get_by_id(session, word_classification.id)
+                await actual_verb_record.update(session, **{'verbal_tense_id': data.id_verbal_tense})
 
+            await word_classification.update(session, **{'word_type_id':word_type.id})
         session.commit()
 
         language = await Language.get_by_value(session, 'English')
         # Añadir traducciones
-        for translate in data.translates:
-            new_translation = Translation(value=translate, word_classification_id=word_classification.id, language_id=language.id)
-            session.add(new_translation)
-            session.commit()
+        # for translate in data.translates:
+        #     new_translation = Translation(value=translate, word_classification_id=word_classification.id, language_id=language.id)
+        #     session.add(new_translation)
+        #     session.commit()
 
         # Añadir ejemplos y sus traducciones
         for example_translation in data.examples_json:
 
             if example_translation.id_example:
-                example_record = Example.get_by_id(example_translation.id_example)
+                example_record = await Example.get_by_id(session, example_translation.id_example)
                 if example_record.value != example_translation.example:
-                    example_record.update(session, **{'value':example_translation.example})
+                    await example_record.update(session, **{'value':example_translation.example})
             else:
                 example_record = Example(value=example_translation.example, word_classification_id=word_classification.id)
                 session.add(example_record)
@@ -170,17 +169,17 @@ class Word(DetailModel):
                 session.refresh(example_record)
 
             if example_translation.id_translate:
-                translation_record = Translation.get_by_id(example_translation.id_translate)
-                update_data = {}
+                translation_record  =await Translation.get_by_id(session, example_translation.id_translate)
+                dict_update_data = {}
 
                 if translation_record.value != example_translation.translate:
-                    update_data.update({'value':  example_translation.translate})
+                    dict_update_data.update({'value':  example_translation.translate})
 
                 if translation_record.description != example_translation.description:
-                    update_data.update({'description':  example_translation.description})
+                    dict_update_data.update({'description':  example_translation.description})
 
-                if update_data:
-                    translation_record.update(session, **update_data)
+                if dict_update_data:
+                    await translation_record.update(session, **dict_update_data)
 
             else:
                 translation_record = Translation(value=example_translation.translate, description=example_translation.description, word_classification_id=word_classification.id, example_id=example_record.id, language_id=language.id)
@@ -301,6 +300,7 @@ class Verb(WordClassification):
     # Agrega estas líneas para establecer la relación de clave foránea con WordClassification
     #word_classification_id: Mapped[int] = mapped_column(ForeignKey('word_classification.id'))
     #word_classification: Mapped['WordClassification'] = relationship(back_populates='word_classification')
+
 
 
 class VerbalTense(DetailModel):

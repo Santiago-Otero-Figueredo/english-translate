@@ -1,5 +1,6 @@
 from fastapi import APIRouter, status, Depends, Request, Form, HTTPException, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy.orm import Session
 

@@ -186,6 +186,7 @@
         function getDataFromWord({findWord=""}){
             apiGetRequest(url_get_info_word, findWord).then(wordInfo => {
                 if (wordInfo !== null) {
+                    resetInputsValues()
                     hideAllElements()
                     showElement({idElementHtml: "divOriginalWord"});
                     showElement({idElementHtml: "divTranslates"});
@@ -261,6 +262,51 @@
         }
 
         
+        function resetInputsValues(){
+            let select_verbal_tense = document.getElementById('verbalTense')
+            select_verbal_tense.selectedIndex = 0;
+
+            let input_id_root_word = document.getElementById('idValueOriginalWordInput')
+            input_id_root_word.value = ''
+
+            let input_id_word_variation = document.getElementById('idValueWordVariation')
+            input_id_word_variation.value = ''
+            
+            let input_root_word = document.getElementById('originalWordInput')
+            input_root_word.value = ''
+
+            //let input_word_variation = document.getElementById('wordVariationInput')
+            //input_word_variation.value = ''
+            
+            let select_word_type = document.getElementById('wordTypesSelect')
+            select_word_type.selectedIndex = 0;
+          
+            let input_translates = document.getElementById('translatesInput')
+            input_translates.value = ''
+
+
+            let exampleSets = document.querySelectorAll(".example-set");
+
+            exampleSets.forEach(function(set, index) {
+
+                let id_example = set.querySelector("input[name='id_example']");
+                id_example.value = ''
+
+                let example = set.querySelector("textarea[name='example']");
+                example.value = ''
+
+                let id_translate = set.querySelector("input[name='id_translate']");
+                id_translate.value = ''
+
+                let translate = set.querySelector("textarea[name='example_translate']");
+                translate.value = ''
+
+                let description = set.querySelector("textarea[name='description_example_translate']");
+                description.value = ''
+            
+            });
+            
+        }
 
         assignInputEvents()
         /**
@@ -329,6 +375,8 @@
             // Obtener el valor del inputWordVariation
 
             if (event.key === ' ' || event.key === 'Enter') {
+                
+
                 // Obtiene el valor del input en este punto
                 let valorInput = this.value.trim();
                 // Llama a la función deseada pasando el valor del input
@@ -358,6 +406,7 @@
                         idElementHtml: "divWordTypesSelect",
                     });
                 } else {
+                    resetInputsValues()
                     hideAllElements()
                     
                 }

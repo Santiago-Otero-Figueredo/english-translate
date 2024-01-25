@@ -140,20 +140,37 @@ class Word(DetailModel):
             session.commit()
         else:
             word_classification.number_of_times_searched = word_classification.number_of_times_searched + 1 
-
-            if word_type_verb.id == data.id_word_type:
-                actual_verb_record = await Verb.get_by_id(session, word_classification.id)
-                await actual_verb_record.update(session, **{'verbal_tense_id': data.id_verbal_tense})
-
-            await word_classification.update(session, **{'word_type_id':word_type.id})
+            await word_classification.update(session, **{'word_type_id':word_type.id, 'verbal_tense_id': data.id_verbal_tense})
+        
         session.commit()
 
+        list_words_translations =  list(map(str.strip, data.translates))
+
         language = await Language.get_by_value(session, 'English')
+
+        actual_translations = session.query(Translation).\
+            filter(Translation.word_classification_id == word_classification.id).\
+            filter(Translation.example_id.is_(None))
+        
+        actual_translations_record = actual_translations.filter(Translation.value.in_(list_words_translations)).all()
+        old_translations_to_delete = actual_translations.filter(~Translation.value.in_(list_words_translations)).all()
+        
+        # Convertir valores_existentes a un conjunto para facilitar la comparación
+        actual_translations_to_keep_set = set([v.value for v in actual_translations_record])
+
+        # Determinar cuáles valores de la lista original no están en la base de datos
+        new_translations_to_add = [v for v in list_words_translations if v not in actual_translations_to_keep_set]
+
+        print("Valores no registrados:", new_translations_to_add)
         # Añadir traducciones
-        # for translate in data.translates:
-        #     new_translation = Translation(value=translate, word_classification_id=word_classification.id, language_id=language.id)
-        #     session.add(new_translation)
-        #     session.commit()
+        for translate in new_translations_to_add:
+            new_translation = Translation(value=translate, word_classification_id=word_classification.id, language_id=language.id)
+            session.add(new_translation)
+            session.commit()
+
+        # Remove old records
+        for old_translate in old_translations_to_delete:
+           await old_translate.delete(session)
 
         # Añadir ejemplos y sus traducciones
         for example_translation in data.examples_json:
@@ -247,6 +264,9 @@ class WordClassification(DetailModel):
     word_id: Mapped[int] = mapped_column(ForeignKey('word.id'))
     word: Mapped['Word'] = relationship(back_populates='word_classifications')
 
+    verbal_tense_id: Mapped[int] = mapped_column(ForeignKey('verbal_tense.id'), nullable=True)
+    verbal_tense: Mapped['VerbalTense'] = relationship(back_populates='verbs')
+
     # Many to many relationship for synonyms
     synonyms: Mapped[List['WordClassification']] = relationship(
         'WordClassification',
@@ -285,21 +305,21 @@ class WordClassification(DetailModel):
 
 
 
-class Verb(WordClassification):
-    __tablename__ = "verb"
+# class Verb(WordClassification):
+#     __tablename__ = "verb"
 
-    id: Mapped[int] = mapped_column(ForeignKey('word_classification.id'), primary_key=True)
+#     id: Mapped[int] = mapped_column(ForeignKey('word_classification.id'), primary_key=True)
 
-    verbal_tense_id: Mapped[int] = mapped_column(ForeignKey('verbal_tense.id'))
-    verbal_tense: Mapped['VerbalTense'] = relationship(back_populates='verbs')
+#     verbal_tense_id: Mapped[int] = mapped_column(ForeignKey('verbal_tense.id'))
+#     verbal_tense: Mapped['VerbalTense'] = relationship(back_populates='verbs')
 
-    # Configuración de la relación de herencia
-    __mapper_args__ = {
-        'inherit_condition': id == WordClassification.id  # Ajusta según tus necesidades específicas
-    }
-    # Agrega estas líneas para establecer la relación de clave foránea con WordClassification
-    #word_classification_id: Mapped[int] = mapped_column(ForeignKey('word_classification.id'))
-    #word_classification: Mapped['WordClassification'] = relationship(back_populates='word_classification')
+#     # Configuración de la relación de herencia
+#     __mapper_args__ = {
+#         'inherit_condition': id == WordClassification.id  # Ajusta según tus necesidades específicas
+#     }
+#     # Agrega estas líneas para establecer la relación de clave foránea con WordClassification
+#     #word_classification_id: Mapped[int] = mapped_column(ForeignKey('word_classification.id'))
+#     #word_classification: Mapped['WordClassification'] = relationship(back_populates='word_classification')
 
 
 
@@ -308,7 +328,7 @@ class VerbalTense(DetailModel):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
-    verbs: Mapped[List['Verb']] = relationship(back_populates='verbal_tense')
+    verbs: Mapped[List['WordClassification']] = relationship(back_populates='verbal_tense')
 
     @staticmethod
     @db_transaction

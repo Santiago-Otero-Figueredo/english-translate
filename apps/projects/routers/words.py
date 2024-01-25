@@ -9,7 +9,7 @@ from fastapi.templating import Jinja2Templates
 from core.database import get_session
 
 # from apps.projects.models import Task, Priority, Project, State
-from apps.projects.models import Word, WordClassification, WordType, Verb
+from apps.projects.models import Word, WordClassification, WordType
 from apps.projects.schemas.detail_model import DetailModelRequest
 from apps.projects.schemas.words import WordRegister, WordCompleteInfoRegister, ExampleTranslatesRequest, WordSearchRequest, TranslationRequest, ExampleRequest
 
@@ -118,8 +118,6 @@ async def search_word(word_search: str, session: Session = Depends(get_session))
 
     id_verbal_tense = None
     if word_info.word_type_id == word_type.id:
-        word_info = await Verb.get_by_value(session, word_search, case_sensitive=False)
-        
         id_verbal_tense = word_info.verbal_tense_id
 
     

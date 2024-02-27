@@ -1,10 +1,10 @@
-from sqlalchemy import CheckConstraint, String, ForeignKey
+from sqlalchemy import CheckConstraint, String, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from core.database import get_session
 
 from typing import TYPE_CHECKING, List, Union
 
-from datetime import datetime
+from datetime import datetime, timedelta, date
 
 from .decorators.register import db_transaction
 from ..base import DetailModel, BaseModel
@@ -119,27 +119,45 @@ class Word(DetailModel):
                 await word_classification.update(session, **{'value':data_word_classification.value.strip()})
         else:
             word_classification = await WordClassification.get_by_value(session, data_word_classification.value.strip())
+        
+        actual_date = datetime.now().date()
+        initial_date_range, final_date_range = Search.get_nearest_sunday_saturday(actual_date)
 
         if not word_classification:
-            if word_type_verb.id == word_type.id:
-                word_classification = Verb(
-                    value=data_word_classification.value.strip(),
-                    number_of_times_searched=1,
-                    word_type_id=word_type.id,
-                    verbal_tense_id=data.id_verbal_tense,
-                    word_id=word.id
-                )
-            else:
-                word_classification = WordClassification(
-                    value=data_word_classification.value.strip(),
-                    number_of_times_searched=1,
-                    word_type_id=word_type.id,
-                    word_id= word.id
-                )
+            word_classification = WordClassification(
+                value=data_word_classification.value.strip(),
+                word_type_id=word_type.id,
+                verbal_tense_id=data.id_verbal_tense,
+                word_id= word.id
+            )
             session.add(word_classification)
             session.commit()
+            
+            search = Search(
+                value='n/a',
+                number_of_times_searched=1,
+                word_classification_id=word_classification.pk,
+                initial_date_range=initial_date_range,
+                final_date_range=final_date_range,
+            )
+            session.add(search)
+            session.commit()
+           
         else:
-            word_classification.number_of_times_searched = word_classification.number_of_times_searched + 1 
+            search = await Search.get_by_values_range_and_word_classification(session, word_classification, initial_date_range, final_date_range)
+            if not search:
+                search = Search(
+                    value='n/a',
+                    number_of_times_searched=1,
+                    word_classification_id=word_classification.id,
+                    initial_date_range=initial_date_range,
+                    final_date_range=final_date_range,
+                )
+                session.add(search)
+                session.commit()
+
+            total_searches =  search.number_of_times_searched + 1
+            await search.update(session, **{'number_of_times_searched':total_searches})
             await word_classification.update(session, **{'word_type_id':word_type.id, 'verbal_tense_id': data.id_verbal_tense})
         
         session.commit()
@@ -151,7 +169,7 @@ class Word(DetailModel):
         actual_translations = session.query(Translation).\
             filter(Translation.word_classification_id == word_classification.id).\
             filter(Translation.example_id.is_(None))
-        
+       
         actual_translations_record = actual_translations.filter(Translation.value.in_(list_words_translations)).all()
         old_translations_to_delete = actual_translations.filter(~Translation.value.in_(list_words_translations)).all()
         
@@ -247,16 +265,53 @@ class Antonym(BaseModel):
     antonym_id: Mapped[int] = mapped_column(ForeignKey('word_classification.id'))
 
 
+class Search(DetailModel):
+    __tablename__ = "search"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    number_of_times_searched: Mapped[int] = mapped_column(default=1)
+
+    word_classification_id: Mapped[Union[int, None]] = mapped_column(ForeignKey('word_classification.id'))
+    word_classification: Mapped[Union['WordClassification', None]] = relationship(back_populates='searches')
+
+    initial_date_range: Mapped[date] = mapped_column()
+    final_date_range: Mapped[date] = mapped_column()
+
+    @staticmethod
+    def get_nearest_sunday_saturday(date):
+        if date.weekday() == 6:  # If today is Sunday
+            past_sunday = date  # Past Sunday is a week ago
+            # Calculate the next Saturday by adding 6 days to the past Sunday
+            next_saturday = past_sunday + timedelta(days=6)
+        else:
+            # Calculate the past Sunday by going back to the last Sunday
+            past_sunday = date - timedelta(days=date.weekday() + 1)
+            # Calculate the next Saturday by adding the remaining days of the current week and then advancing a week
+            next_saturday = date + timedelta(days=(5 - date.weekday()))
+
+        return past_sunday, next_saturday
+    
+    @staticmethod
+    async def get_by_values_range_and_word_classification(session, word_classification:int, initial_date:'datetime', final_date:'datetime'):
+         
+        return session.query(Search).\
+            filter(Search.word_classification_id == word_classification.id).\
+            filter(func.date(Search.initial_date_range) == initial_date).\
+            filter(func.date(Search.final_date_range) == final_date).first()
+
+        
+
 class WordClassification(DetailModel):
     __tablename__ = "word_classification"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    number_of_times_searched: Mapped[int] = mapped_column(default=1)
     description: Mapped[Union[str, None]]
 
     examples: Mapped[List['Example']] = relationship(back_populates='word_classification')
     translations: Mapped[List['Translation']] = relationship(back_populates='word_classification')
     source_contents: Mapped[List['SourceContent']] = relationship(back_populates='word_classification')
+    searches: Mapped[List['Search']] = relationship(back_populates='word_classification')
+
 
     word_type_id: Mapped[int] = mapped_column(ForeignKey('word_type.id'))
     word_type: Mapped['WordType'] = relationship(back_populates='word_classifications')
@@ -266,6 +321,7 @@ class WordClassification(DetailModel):
 
     verbal_tense_id: Mapped[int] = mapped_column(ForeignKey('verbal_tense.id'), nullable=True)
     verbal_tense: Mapped['VerbalTense'] = relationship(back_populates='verbs')
+
 
     # Many to many relationship for synonyms
     synonyms: Mapped[List['WordClassification']] = relationship(
@@ -291,7 +347,6 @@ class WordClassification(DetailModel):
         new_register = WordClassification(
             value= data.value,
             description= data.description,
-            number_of_times_searched= data.number_of_times_searched,
             word_type_id= data.word_type_id,
             word_id= data.word_id
         )
@@ -299,7 +354,7 @@ class WordClassification(DetailModel):
         session.commit()
         session.refresh(new_register)
 
-    
+
     
 
 
